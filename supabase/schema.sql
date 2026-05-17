@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   category             TEXT,
   subcategory          TEXT,
   pending              BOOLEAN DEFAULT false,
+  user_modified        BOOLEAN DEFAULT false,  -- true = user edited this row; sync will not overwrite it
   created_at           TIMESTAMPTZ DEFAULT now()
 );
 

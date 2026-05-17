@@ -88,4 +88,34 @@ router.get('/summary', async (req, res) => {
   }
 })
 
+// PATCH /api/transactions/:id — edit category, date, or amount
+router.patch('/:id', async (req, res) => {
+  const { id } = req.params
+  const { category, date, amount } = req.body
+
+  const updates = { user_modified: true }
+  if (category !== undefined) updates.category = category
+  if (date !== undefined) updates.date = date
+  if (amount !== undefined) updates.amount = Number(amount)
+
+  if (Object.keys(updates).length === 1) {
+    return res.status(400).json({ error: 'No valid fields to update' })
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('transactions')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    res.json(data)
+  } catch (err) {
+    console.error('patch transaction error:', err.message)
+    res.status(500).json({ error: 'Failed to update transaction' })
+  }
+})
+
 export default router

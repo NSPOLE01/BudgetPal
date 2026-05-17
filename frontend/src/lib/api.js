@@ -34,3 +34,9 @@ export const getTransactions = (params = {}) => {
 
 export const getSpendingSummary = () =>
   request('/api/transactions/summary')
+
+export const updateTransaction = (id, fields) =>
+  request(`/api/transactions/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(fields),
+  })

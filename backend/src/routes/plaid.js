@@ -107,18 +107,31 @@ router.post('/sync', async (req, res) => {
         cursor = data.next_cursor
       }
 
-      // Upsert added + modified transactions
-      const upsertRows = [...added, ...modified].map((t) => ({
-        plaid_transaction_id: t.transaction_id,
-        plaid_account_id: t.account_id,
-        amount: t.amount,
-        date: t.date,
-        merchant_name: t.merchant_name || null,
-        name: t.name,
-        category: t.personal_finance_category?.primary || (t.category?.[0] ?? null),
-        subcategory: t.personal_finance_category?.detailed || (t.category?.[1] ?? null),
-        pending: t.pending,
-      }))
+      // Fetch IDs the user has manually edited so we don't overwrite their changes
+      const allIds = [...added, ...modified].map((t) => t.transaction_id)
+      let modifiedByUser = new Set()
+      if (allIds.length) {
+        const { data: manualRows } = await supabase
+          .from('transactions')
+          .select('plaid_transaction_id')
+          .in('plaid_transaction_id', allIds)
+          .eq('user_modified', true)
+        modifiedByUser = new Set((manualRows || []).map((r) => r.plaid_transaction_id))
+      }
+
+      const upsertRows = [...added, ...modified]
+        .filter((t) => !modifiedByUser.has(t.transaction_id))
+        .map((t) => ({
+          plaid_transaction_id: t.transaction_id,
+          plaid_account_id: t.account_id,
+          amount: t.amount,
+          date: t.date,
+          merchant_name: t.merchant_name || null,
+          name: t.name,
+          category: t.personal_finance_category?.primary || (t.category?.[0] ?? null),
+          subcategory: t.personal_finance_category?.detailed || (t.category?.[1] ?? null),
+          pending: t.pending,
+        }))
 
       if (upsertRows.length) {
         await supabase

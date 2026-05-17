@@ -158,7 +158,14 @@ export default function Dashboard({ connected, onConnected }) {
                   </span>
                 )}
               </div>
-              <TransactionList transactions={transactions} />
+              <TransactionList
+                transactions={transactions}
+                onTransactionUpdated={(updated) => {
+                  setTransactions((prev) => prev.map((tx) => tx.id === updated.id ? updated : tx))
+                  // Refresh summary so spend cards reflect the edit
+                  getSpendingSummary().then(setSummary).catch(() => {})
+                }}
+              />
             </section>
           </>
         )}
