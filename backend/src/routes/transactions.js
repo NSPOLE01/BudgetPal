@@ -92,6 +92,36 @@ router.get('/summary', async (req, res) => {
   }
 })
 
+// GET /api/transactions/monthly — total spend grouped by calendar month, oldest first
+router.get('/monthly', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('amount, date')
+      .eq('pending', false)
+      .gt('amount', 0)
+      .order('date', { ascending: true })
+
+    if (error) throw error
+
+    const monthMap = {}
+    for (const tx of data) {
+      const key = tx.date.slice(0, 7) // 'YYYY-MM'
+      monthMap[key] = (monthMap[key] || 0) + tx.amount
+    }
+
+    const monthly = Object.entries(monthMap).map(([month, total]) => ({
+      month,
+      total: Math.round(total * 100) / 100,
+    }))
+
+    res.json(monthly)
+  } catch (err) {
+    console.error('monthly error:', err.message)
+    res.status(500).json({ error: 'Failed to fetch monthly totals' })
+  }
+})
+
 // PATCH /api/transactions/:id — edit category, date, or amount
 router.patch('/:id', async (req, res) => {
   const { id } = req.params

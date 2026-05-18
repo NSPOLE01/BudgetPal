@@ -42,3 +42,6 @@ export const updateTransaction = (id, fields) =>
     method: 'PATCH',
     body: JSON.stringify(fields),
   })
+
+export const getMonthlyTotals = () =>
+  request('/api/transactions/monthly')

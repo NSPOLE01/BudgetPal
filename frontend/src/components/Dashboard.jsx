@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import ConnectButton from './ConnectButton.jsx'
 import SpendSummary from './SpendSummary.jsx'
 import CategoryChart from './CategoryChart.jsx'
+import MonthlyChart from './MonthlyChart.jsx'
 import TransactionList from './TransactionList.jsx'
-import { getSpendingSummary, getTransactions, syncTransactions } from '../lib/api.js'
+import { getSpendingSummary, getTransactions, getMonthlyTotals, syncTransactions } from '../lib/api.js'
 
 const TIMEFRAMES = [
   { label: '1M', months: 1 },
@@ -24,17 +25,20 @@ export default function Dashboard({ connected, onConnected }) {
   const [lastSync, setLastSync] = useState(null)
   const [error, setError] = useState(null)
   const [chartTimeframe, setChartTimeframe] = useState('1M')
+  const [monthlyTotals, setMonthlyTotals] = useState([])
 
   const load = useCallback(async (timeframe = chartTimeframe) => {
     if (!connected) return
     const months = TIMEFRAMES.find((t) => t.label === timeframe)?.months ?? 1
     try {
-      const [s, t] = await Promise.all([
+      const [s, t, m] = await Promise.all([
         getSpendingSummary(getChartStart(months)),
         getTransactions({ limit: 50 }),
+        getMonthlyTotals(),
       ])
       setSummary(s)
       setTransactions(t.transactions ?? [])
+      setMonthlyTotals(m)
     } catch (e) {
       setError(e.message)
     }
@@ -145,6 +149,23 @@ export default function Dashboard({ connected, onConnected }) {
             {/* Spending summary */}
             <section style={{ marginBottom: 40 }}>
               <SpendSummary summary={summary} />
+            </section>
+
+            {/* Monthly spend over time */}
+            <section style={{
+              marginBottom: 40,
+              background: 'var(--bg-2)',
+              border: '1px solid var(--border)',
+              borderRadius: 16,
+              padding: '28px 32px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <h2 style={{ fontFamily: 'var(--font-head)', fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em' }}>
+                  Monthly Spend
+                </h2>
+                <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Since first transaction</span>
+              </div>
+              <MonthlyChart data={monthlyTotals} />
             </section>
 
             {/* Category chart */}
