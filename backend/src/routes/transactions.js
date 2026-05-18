@@ -30,25 +30,28 @@ router.get('/', async (req, res) => {
   }
 })
 
-// GET /api/transactions/summary — returns spend totals for today, this week, this month
+// GET /api/transactions/summary?chartStart=2024-01-01
+// chartStart controls the category breakdown window; today/week/month totals are always fixed
 router.get('/summary', async (req, res) => {
   try {
     const now = new Date()
     const todayStr = now.toISOString().split('T')[0]
 
-    // Start of current week (Monday)
     const dayOfWeek = now.getDay() === 0 ? 6 : now.getDay() - 1
     const weekStart = new Date(now)
     weekStart.setDate(now.getDate() - dayOfWeek)
     const weekStartStr = weekStart.toISOString().split('T')[0]
 
-    // Start of current month
     const monthStartStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+
+    // chartStart defaults to the current month; can be overridden for longer chart windows
+    const chartStart = req.query.chartStart || monthStartStr
+    const fetchStart = chartStart < monthStartStr ? chartStart : monthStartStr
 
     const { data, error } = await supabase
       .from('transactions')
       .select('amount, date, category')
-      .gte('date', monthStartStr)
+      .gte('date', fetchStart)
       .eq('pending', false)
 
     if (error) throw error
@@ -59,14 +62,15 @@ router.get('/summary', async (req, res) => {
     const categoryMap = {}
 
     for (const tx of data) {
-      // Plaid amounts are positive for debits (money out), negative for credits
       const spend = tx.amount > 0 ? tx.amount : 0
 
+      // Spend totals always use fixed windows
       if (tx.date === todayStr) todaySpend += spend
       if (tx.date >= weekStartStr) weekSpend += spend
-      monthSpend += spend
+      if (tx.date >= monthStartStr) monthSpend += spend
 
-      if (spend > 0) {
+      // Category breakdown uses the requested chartStart window
+      if (spend > 0 && tx.date >= chartStart) {
         const cat = tx.category || 'Other'
         categoryMap[cat] = (categoryMap[cat] || 0) + spend
       }

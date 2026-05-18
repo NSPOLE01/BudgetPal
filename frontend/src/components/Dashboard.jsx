@@ -5,23 +5,46 @@ import CategoryChart from './CategoryChart.jsx'
 import TransactionList from './TransactionList.jsx'
 import { getSpendingSummary, getTransactions, syncTransactions } from '../lib/api.js'
 
+const TIMEFRAMES = [
+  { label: '1M', months: 1 },
+  { label: '6M', months: 6 },
+  { label: '1Y', months: 12 },
+]
+
+function getChartStart(months) {
+  const d = new Date()
+  d.setMonth(d.getMonth() - months)
+  return d.toISOString().split('T')[0]
+}
+
 export default function Dashboard({ connected, onConnected }) {
   const [summary, setSummary] = useState(null)
   const [transactions, setTransactions] = useState([])
   const [syncing, setSyncing] = useState(false)
   const [lastSync, setLastSync] = useState(null)
   const [error, setError] = useState(null)
+  const [chartTimeframe, setChartTimeframe] = useState('1M')
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (timeframe = chartTimeframe) => {
     if (!connected) return
+    const months = TIMEFRAMES.find((t) => t.label === timeframe)?.months ?? 1
     try {
-      const [s, t] = await Promise.all([getSpendingSummary(), getTransactions({ limit: 50 })])
+      const [s, t] = await Promise.all([
+        getSpendingSummary(getChartStart(months)),
+        getTransactions({ limit: 50 }),
+      ])
       setSummary(s)
       setTransactions(t.transactions ?? [])
     } catch (e) {
       setError(e.message)
     }
-  }, [connected])
+  }, [connected, chartTimeframe])
+
+  const handleTimeframeChange = (label) => {
+    setChartTimeframe(label)
+    const months = TIMEFRAMES.find((t) => t.label === label)?.months ?? 1
+    getSpendingSummary(getChartStart(months)).then(setSummary).catch(() => {})
+  }
 
   useEffect(() => { load() }, [load])
 
@@ -30,7 +53,7 @@ export default function Dashboard({ connected, onConnected }) {
     setError(null)
     try {
       await syncTransactions()
-      await load()
+      await load(chartTimeframe)
       setLastSync(new Date())
     } catch (e) {
       setError(e.message)
@@ -136,7 +159,28 @@ export default function Dashboard({ connected, onConnected }) {
                 <h2 style={{ fontFamily: 'var(--font-head)', fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em' }}>
                   Spending by Category
                 </h2>
-                <span style={{ fontSize: 11, color: 'var(--text-3)' }}>This month</span>
+                <div style={{ display: 'flex', gap: 4, background: 'var(--bg)', borderRadius: 8, padding: 3, border: '1px solid var(--border)' }}>
+                  {TIMEFRAMES.map(({ label }) => (
+                    <button
+                      key={label}
+                      onClick={() => handleTimeframeChange(label)}
+                      style={{
+                        padding: '4px 12px',
+                        borderRadius: 6,
+                        border: 'none',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: 12,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        background: chartTimeframe === label ? 'var(--bg-3)' : 'transparent',
+                        color: chartTimeframe === label ? 'var(--text)' : 'var(--text-3)',
+                        fontWeight: chartTimeframe === label ? 500 : 400,
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <CategoryChart data={summary?.categoryBreakdown} />
             </section>
@@ -162,8 +206,8 @@ export default function Dashboard({ connected, onConnected }) {
                 transactions={transactions}
                 onTransactionUpdated={(updated) => {
                   setTransactions((prev) => prev.map((tx) => tx.id === updated.id ? updated : tx))
-                  // Refresh summary so spend cards reflect the edit
-                  getSpendingSummary().then(setSummary).catch(() => {})
+                  const months = TIMEFRAMES.find((t) => t.label === chartTimeframe)?.months ?? 1
+                  getSpendingSummary(getChartStart(months)).then(setSummary).catch(() => {})
                 }}
               />
             </section>

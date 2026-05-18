@@ -32,8 +32,10 @@ export const getTransactions = (params = {}) => {
   return request(`/api/transactions${qs ? `?${qs}` : ''}`)
 }
 
-export const getSpendingSummary = () =>
-  request('/api/transactions/summary')
+export const getSpendingSummary = (chartStart) => {
+  const qs = chartStart ? `?chartStart=${chartStart}` : ''
+  return request(`/api/transactions/summary${qs}`)
+}
 
 export const updateTransaction = (id, fields) =>
   request(`/api/transactions/${id}`, {
