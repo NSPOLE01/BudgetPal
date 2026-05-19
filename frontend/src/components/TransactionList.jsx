@@ -47,6 +47,22 @@ function CategoryBadge({ category }) {
   )
 }
 
+function InstitutionBadge({ name, mask }) {
+  if (!name) return null
+  const hue = [...name].reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360
+  return (
+    <span style={{
+      fontSize: 10, padding: '3px 8px', borderRadius: 20, whiteSpace: 'nowrap',
+      background: `hsl(${hue}, 30%, 15%)`,
+      border: `1px solid hsl(${hue}, 30%, 25%)`,
+      color: `hsl(${hue}, 60%, 65%)`,
+      letterSpacing: '0.04em',
+    }}>
+      {name}{mask ? ` ••${mask}` : ''}
+    </span>
+  )
+}
+
 const inputStyle = {
   background: 'var(--bg)',
   border: '1px solid var(--border-2)',
@@ -202,6 +218,7 @@ function TransactionRow({ tx, onUpdated, onDeleted }) {
       </div>
 
       <CategoryBadge category={tx.category} />
+      <InstitutionBadge name={tx.institution_name} mask={tx.account_mask} />
 
       <p style={{ fontSize: 11, color: 'var(--text-3)', minWidth: 48, textAlign: 'right' }}>
         {fmtDate(tx.date)}

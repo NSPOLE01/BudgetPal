@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
 
     let query = supabase
       .from('transactions')
-      .select('*')
+      .select('*, accounts!inner(name, mask, items!inner(institution_name))')
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
       .eq('pending', false)
@@ -23,7 +23,15 @@ router.get('/', async (req, res) => {
     const { data, error, count } = await query
     if (error) throw error
 
-    res.json({ transactions: data, total: count })
+    // Flatten nested join into a flat institution_name field
+    const transactions = data.map(({ accounts, ...tx }) => ({
+      ...tx,
+      institution_name: accounts?.items?.institution_name ?? null,
+      account_name: accounts?.name ?? null,
+      account_mask: accounts?.mask ?? null,
+    }))
+
+    res.json({ transactions, total: count })
   } catch (err) {
     console.error('get transactions error:', err.message)
     res.status(500).json({ error: 'Failed to fetch transactions' })
