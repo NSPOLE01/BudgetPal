@@ -15,6 +15,8 @@ export async function syncAllItems() {
     const modified = []
     const removedIds = []
 
+    console.log(`[sync] starting item: ${item.institution_name}, cursor: ${cursor ? 'set' : 'null'}`)
+
     while (hasMore) {
       const syncRes = await plaidClient.transactionsSync({
         access_token: item.plaid_access_token,
@@ -27,6 +29,8 @@ export async function syncAllItems() {
       removedIds.push(...data.removed.map((r) => r.transaction_id))
       hasMore = data.has_more
       cursor = data.next_cursor
+
+      console.log(`[sync] page — added: ${data.added.length}, modified: ${data.modified.length}, removed: ${data.removed.length}, has_more: ${data.has_more}`)
     }
 
     const allIds = [...added, ...modified].map((t) => t.transaction_id)
@@ -69,8 +73,10 @@ export async function syncAllItems() {
       .update({ cursor, last_synced_at: new Date().toISOString() })
       .eq('id', item.id)
 
+    console.log(`[sync] ${item.institution_name} done — upserted: ${upsertRows.length}, removed: ${removedIds.length}`)
     totalSynced += upsertRows.length
   }
 
+  console.log(`[sync] complete — total synced: ${totalSynced}`)
   return { synced: totalSynced }
 }
