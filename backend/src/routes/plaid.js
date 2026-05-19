@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { CountryCode, Products } from 'plaid'
 import plaidClient from '../lib/plaid.js'
 import supabase from '../lib/supabase.js'
+import { syncAllItems } from '../lib/sync.js'
 
 const router = Router()
 
@@ -77,83 +78,10 @@ router.post('/exchange-token', async (req, res) => {
   }
 })
 
-// Syncs transactions from Plaid for all connected items using the cursor-based sync API
 router.post('/sync', async (req, res) => {
   try {
-    const { data: items, error } = await supabase.from('items').select('*')
-    if (error) throw error
-    if (!items.length) return res.json({ synced: 0 })
-
-    let totalSynced = 0
-
-    for (const item of items) {
-      let cursor = item.cursor || undefined
-      let hasMore = true
-      const added = []
-      const modified = []
-      const removedIds = []
-
-      while (hasMore) {
-        const syncRes = await plaidClient.transactionsSync({
-          access_token: item.plaid_access_token,
-          cursor,
-        })
-        const data = syncRes.data
-
-        added.push(...data.added)
-        modified.push(...data.modified)
-        removedIds.push(...data.removed.map((r) => r.transaction_id))
-        hasMore = data.has_more
-        cursor = data.next_cursor
-      }
-
-      // Fetch IDs the user has manually edited so we don't overwrite their changes
-      const allIds = [...added, ...modified].map((t) => t.transaction_id)
-      let modifiedByUser = new Set()
-      if (allIds.length) {
-        const { data: manualRows } = await supabase
-          .from('transactions')
-          .select('plaid_transaction_id')
-          .in('plaid_transaction_id', allIds)
-          .eq('user_modified', true)
-        modifiedByUser = new Set((manualRows || []).map((r) => r.plaid_transaction_id))
-      }
-
-      const upsertRows = [...added, ...modified]
-        .filter((t) => !modifiedByUser.has(t.transaction_id))
-        .map((t) => ({
-          plaid_transaction_id: t.transaction_id,
-          plaid_account_id: t.account_id,
-          amount: t.amount,
-          date: t.date,
-          merchant_name: t.merchant_name || null,
-          name: t.name,
-          category: t.personal_finance_category?.primary || (t.category?.[0] ?? null),
-          subcategory: t.personal_finance_category?.detailed || (t.category?.[1] ?? null),
-          pending: t.pending,
-        }))
-
-      if (upsertRows.length) {
-        await supabase
-          .from('transactions')
-          .upsert(upsertRows, { onConflict: 'plaid_transaction_id' })
-      }
-
-      // Delete removed transactions
-      if (removedIds.length) {
-        await supabase.from('transactions').delete().in('plaid_transaction_id', removedIds)
-      }
-
-      // Save updated cursor
-      await supabase
-        .from('items')
-        .update({ cursor, last_synced_at: new Date().toISOString() })
-        .eq('id', item.id)
-
-      totalSynced += upsertRows.length
-    }
-
-    res.json({ synced: totalSynced })
+    const result = await syncAllItems()
+    res.json(result)
   } catch (err) {
     console.error('sync error:', err.response?.data || err.message)
     res.status(500).json({ error: 'Sync failed' })
