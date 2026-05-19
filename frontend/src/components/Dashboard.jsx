@@ -26,6 +26,12 @@ export default function Dashboard({ connected, onConnected }) {
   const [error, setError] = useState(null)
   const [chartTimeframe, setChartTimeframe] = useState('1M')
   const [monthlyTotals, setMonthlyTotals] = useState([])
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
 
   const load = useCallback(async (timeframe = chartTimeframe) => {
     if (!connected) return
@@ -89,7 +95,7 @@ export default function Dashboard({ connected, onConnected }) {
         top: 0,
         zIndex: 10,
         borderBottom: '1px solid var(--border)',
-        background: 'rgba(10,10,15,0.85)',
+        background: 'color-mix(in srgb, var(--bg) 85%, transparent)',
         backdropFilter: 'blur(12px)',
         padding: '0 32px',
         height: 56,
@@ -111,6 +117,33 @@ export default function Dashboard({ connected, onConnected }) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={() => setTheme((t) => t === 'dark' ? 'light' : 'dark')}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 34, height: 34,
+              background: 'var(--bg-3)',
+              border: '1px solid var(--border-2)',
+              borderRadius: 8,
+              cursor: 'pointer',
+              color: 'var(--text-2)',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent)'}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-2)'}
+          >
+            {theme === 'dark' ? (
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <circle cx="7.5" cy="7.5" r="3" stroke="currentColor" strokeWidth="1.4" />
+                <path d="M7.5 1v1.5M7.5 12.5V14M1 7.5h1.5M12.5 7.5H14M3 3l1 1M11 11l1 1M11 3l-1 1M3 11l1-1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <path d="M13 8.5A5.5 5.5 0 1 1 6.5 2a4 4 0 0 0 6.5 6.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </button>
           {connected && (
             <button style={syncBtnStyle} onClick={handleSync} disabled={syncing}
               onMouseEnter={(e) => !syncing && (e.currentTarget.style.borderColor = 'var(--accent)')}
