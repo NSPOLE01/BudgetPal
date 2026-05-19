@@ -230,6 +230,14 @@ export default function Dashboard({ connected, onConnected }) {
                   const months = TIMEFRAMES.find((t) => t.label === chartTimeframe)?.months ?? 1
                   getSpendingSummary(getChartStart(months)).then(setSummary).catch(() => {})
                 }}
+                onTransactionDeleted={(id) => {
+                  setTransactions((prev) => prev.filter((tx) => tx.id !== id))
+                  const months = TIMEFRAMES.find((t) => t.label === chartTimeframe)?.months ?? 1
+                  Promise.all([
+                    getSpendingSummary(getChartStart(months)),
+                    getMonthlyTotals(),
+                  ]).then(([s, m]) => { setSummary(s); setMonthlyTotals(m) }).catch(() => {})
+                }}
               />
             </section>
           </>

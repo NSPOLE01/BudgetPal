@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { updateTransaction } from '../lib/api.js'
+import { updateTransaction, deleteTransaction } from '../lib/api.js'
 
 const CATEGORIES = [
   'FOOD_AND_DRINK', 'SHOPS', 'TRANSPORTATION', 'TRAVEL', 'ENTERTAINMENT',
@@ -72,11 +72,26 @@ const iconBtnStyle = {
   flexShrink: 0,
 }
 
-function TransactionRow({ tx, onUpdated }) {
+function TransactionRow({ tx, onUpdated, onDeleted }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState({})
   const [saving, setSaving] = useState(false)
   const [hovered, setHovered] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async () => {
+    if (!confirmDelete) { setConfirmDelete(true); return }
+    setDeleting(true)
+    try {
+      await deleteTransaction(tx.id)
+      onDeleted(tx.id)
+    } catch (e) {
+      console.error(e)
+      setDeleting(false)
+      setConfirmDelete(false)
+    }
+  }
 
   const startEdit = () => {
     setDraft({ category: tx.category || '', date: tx.date, amount: Math.abs(tx.amount) })
@@ -200,22 +215,46 @@ function TransactionRow({ tx, onUpdated }) {
         {tx.amount > 0 ? '-' : '+'}{fmt(tx.amount)}
       </p>
 
-      <button
-        onClick={startEdit}
-        style={{ ...iconBtnStyle, opacity: hovered ? 1 : 0, transition: 'opacity 0.12s, color 0.12s' }}
-        title="Edit"
-        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
-        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-3)'}
-      >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+      <div style={{ display: 'flex', gap: 2, opacity: hovered ? 1 : 0, transition: 'opacity 0.12s' }}>
+        <button
+          onClick={startEdit}
+          style={iconBtnStyle}
+          title="Edit"
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-3)'}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          title={confirmDelete ? 'Click again to confirm' : 'Delete'}
+          style={{
+            ...iconBtnStyle,
+            color: confirmDelete ? 'var(--red)' : 'var(--text-3)',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--red)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = confirmDelete ? 'var(--red)' : 'var(--text-3)'}
+          onBlur={() => setConfirmDelete(false)}
+        >
+          {confirmDelete ? (
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 4h10M5 4V2.5h4V4M5.5 6.5v4M8.5 6.5v4M3 4l.7 7.5h6.6L11 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
+      </div>
     </div>
   )
 }
 
-export default function TransactionList({ transactions, onTransactionUpdated }) {
+export default function TransactionList({ transactions, onTransactionUpdated, onTransactionDeleted }) {
   if (!transactions?.length) return (
     <div style={{ padding: '48px 0', textAlign: 'center' }}>
       <p style={{ color: 'var(--text-3)', fontSize: 13 }}>No transactions to show</p>
@@ -226,7 +265,7 @@ export default function TransactionList({ transactions, onTransactionUpdated }) 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       {transactions.map((tx, i) => (
         <div key={tx.id} style={{ animation: 'fadeUp 0.3s ease both', animationDelay: `${Math.min(i * 30, 300)}ms` }}>
-          <TransactionRow tx={tx} onUpdated={onTransactionUpdated} />
+          <TransactionRow tx={tx} onUpdated={onTransactionUpdated} onDeleted={onTransactionDeleted} />
         </div>
       ))}
     </div>

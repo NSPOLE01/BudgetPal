@@ -122,6 +122,18 @@ router.get('/monthly', async (req, res) => {
   }
 })
 
+// DELETE /api/transactions/:id
+router.delete('/:id', async (req, res) => {
+  try {
+    const { error } = await supabase.from('transactions').delete().eq('id', req.params.id)
+    if (error) throw error
+    res.json({ success: true })
+  } catch (err) {
+    console.error('delete transaction error:', err.message)
+    res.status(500).json({ error: 'Failed to delete transaction' })
+  }
+})
+
 // PATCH /api/transactions/:id — edit category, date, or amount
 router.patch('/:id', async (req, res) => {
   const { id } = req.params
