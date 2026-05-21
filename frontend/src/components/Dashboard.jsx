@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import ConnectButton from './ConnectButton.jsx'
 import SpendSummary from './SpendSummary.jsx'
 import CategoryChart from './CategoryChart.jsx'
 import MonthlyChart from './MonthlyChart.jsx'
 import TransactionList from './TransactionList.jsx'
+import Toast from './Toast.jsx'
 import { getSpendingSummary, getTransactions, getMonthlyTotals, syncTransactions } from '../lib/api.js'
+import supabase from '../lib/supabase.js'
 
 const TIMEFRAMES = [
   { label: '1M', months: 1 },
@@ -27,6 +29,13 @@ export default function Dashboard({ connected, onConnected }) {
   const [chartTimeframe, setChartTimeframe] = useState('1M')
   const [monthlyTotals, setMonthlyTotals] = useState([])
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+  const [toast, setToast] = useState(null)
+  const realtimeBuffer = useRef(0)
+  const realtimeTimer = useRef(null)
+
+  const showToast = (count) => {
+    setToast(`${count} new transaction${count !== 1 ? 's' : ''} synced`)
+  }
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -58,13 +67,36 @@ export default function Dashboard({ connected, onConnected }) {
 
   useEffect(() => { load() }, [load])
 
+  // Realtime subscription — auto-refresh when Edge Function inserts new transactions
+  useEffect(() => {
+    if (!connected) return
+    const channel = supabase
+      .channel('transactions-inserts')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions' }, () => {
+        realtimeBuffer.current += 1
+        clearTimeout(realtimeTimer.current)
+        // Batch rapid inserts — reload once they settle
+        realtimeTimer.current = setTimeout(async () => {
+          const count = realtimeBuffer.current
+          realtimeBuffer.current = 0
+          await load(chartTimeframe)
+          setLastSync(new Date())
+          showToast(count)
+        }, 1500)
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [connected, chartTimeframe, load])
+
   const handleSync = async () => {
     setSyncing(true)
     setError(null)
     try {
-      await syncTransactions()
+      const { synced } = await syncTransactions()
       await load(chartTimeframe)
       setLastSync(new Date())
+      if (synced > 0) showToast(synced)
     } catch (e) {
       setError(e.message)
     } finally {
@@ -89,6 +121,7 @@ export default function Dashboard({ connected, onConnected }) {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
       {/* Top bar */}
       <header style={{
         position: 'sticky',
