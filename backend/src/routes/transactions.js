@@ -6,7 +6,7 @@ const router = Router()
 // GET /api/transactions?limit=50&offset=0&category=Food&start=2024-01-01&end=2024-01-31
 router.get('/', async (req, res) => {
   try {
-    const { limit = 50, offset = 0, category, start, end } = req.query
+    const { limit = 50, offset = 0, category, start, end, account_id, min_amount, max_amount } = req.query
 
     let query = supabase
       .from('transactions')
@@ -17,9 +17,12 @@ router.get('/', async (req, res) => {
       .gt('amount', 0)
       .range(Number(offset), Number(offset) + Number(limit) - 1)
 
-    if (category) query = query.eq('category', category)
-    if (start) query = query.gte('date', start)
-    if (end) query = query.lte('date', end)
+    if (category)    query = query.eq('category', category)
+    if (start)       query = query.gte('date', start)
+    if (end)         query = query.lte('date', end)
+    if (account_id)  query = query.eq('plaid_account_id', account_id)
+    if (min_amount)  query = query.gte('amount', Number(min_amount))
+    if (max_amount)  query = query.lte('amount', Number(max_amount))
 
     const { data, error, count } = await query
     if (error) throw error

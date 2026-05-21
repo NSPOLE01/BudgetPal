@@ -4,6 +4,7 @@ import SpendSummary from './SpendSummary.jsx'
 import CategoryChart from './CategoryChart.jsx'
 import MonthlyChart from './MonthlyChart.jsx'
 import TransactionList from './TransactionList.jsx'
+import TransactionFilters from './TransactionFilters.jsx'
 import Toast from './Toast.jsx'
 import { getSpendingSummary, getTransactions, getMonthlyTotals, syncTransactions } from '../lib/api.js'
 import supabase from '../lib/supabase.js'
@@ -30,6 +31,7 @@ export default function Dashboard({ connected, onConnected }) {
   const [monthlyTotals, setMonthlyTotals] = useState([])
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
   const [toast, setToast] = useState(null)
+  const [filters, setFilters] = useState({ account_id: '', start: '', end: '', min_amount: '', max_amount: '' })
   const realtimeBuffer = useRef(0)
   const realtimeTimer = useRef(null)
 
@@ -42,13 +44,14 @@ export default function Dashboard({ connected, onConnected }) {
     localStorage.setItem('theme', theme)
   }, [theme])
 
-  const load = useCallback(async (timeframe = chartTimeframe) => {
+  const load = useCallback(async (timeframe = chartTimeframe, activeFilters = filters) => {
     if (!connected) return
     const months = TIMEFRAMES.find((t) => t.label === timeframe)?.months ?? 1
+    const txParams = Object.fromEntries(Object.entries({ limit: 50, ...activeFilters }).filter(([, v]) => v !== ''))
     try {
       const [s, t, m] = await Promise.all([
         getSpendingSummary(getChartStart(months)),
-        getTransactions({ limit: 50 }),
+        getTransactions(txParams),
         getMonthlyTotals(),
       ])
       setSummary(s)
@@ -57,7 +60,7 @@ export default function Dashboard({ connected, onConnected }) {
     } catch (e) {
       setError(e.message)
     }
-  }, [connected, chartTimeframe])
+  }, [connected, chartTimeframe, filters])
 
   const handleTimeframeChange = (label) => {
     setChartTimeframe(label)
@@ -289,6 +292,7 @@ export default function Dashboard({ connected, onConnected }) {
                   </span>
                 )}
               </div>
+              <TransactionFilters filters={filters} onChange={(f) => { setFilters(f); load(chartTimeframe, f) }} />
               <TransactionList
                 transactions={transactions}
                 onTransactionUpdated={(updated) => {

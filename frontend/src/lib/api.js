@@ -27,6 +27,9 @@ export const syncTransactions = () =>
 export const getConnectedItems = () =>
   request('/api/plaid/items')
 
+export const getAccounts = () =>
+  request('/api/accounts')
+
 export const getTransactions = (params = {}) => {
   const qs = new URLSearchParams(params).toString()
   return request(`/api/transactions${qs ? `?${qs}` : ''}`)

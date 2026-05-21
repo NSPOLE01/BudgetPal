@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import plaidRoutes from './routes/plaid.js'
 import transactionRoutes from './routes/transactions.js'
+import accountRoutes from './routes/accounts.js'
 
 const app = express()
 
@@ -11,6 +12,7 @@ app.use(express.json())
 
 app.use('/api/plaid', plaidRoutes)
 app.use('/api/transactions', transactionRoutes)
+app.use('/api/accounts', accountRoutes)
 
 app.get('/api/health', (_, res) => res.json({ ok: true }))
 
