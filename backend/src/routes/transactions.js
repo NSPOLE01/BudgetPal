@@ -14,6 +14,7 @@ router.get('/', async (req, res) => {
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
       .eq('pending', false)
+      .gt('amount', 0)
       .range(Number(offset), Number(offset) + Number(limit) - 1)
 
     if (category) query = query.eq('category', category)
