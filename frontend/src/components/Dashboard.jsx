@@ -145,8 +145,15 @@ export default function Dashboard({ connected, onConnected }) {
             background: 'var(--accent)',
             borderRadius: 8,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 14, fontWeight: 800, fontFamily: 'var(--font-head)', color: 'var(--bg)',
-          }}>B</div>
+          }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <line x1="2"    y1="2" x2="2"    y2="14" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+              <line x1="5.5"  y1="2" x2="5.5"  y2="14" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+              <line x1="9"    y1="2" x2="9"    y2="14" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+              <line x1="12.5" y1="2" x2="12.5" y2="14" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+              <line x1="0.5"  y1="13" x2="14.5" y2="1" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+          </div>
           <span style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 18, letterSpacing: '-0.02em' }}>
             Tally
           </span>
