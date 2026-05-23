@@ -13,8 +13,8 @@
   --accent-2:  #8b84ff;
   --red:       #ff4d6a;
   --green:     #34d399;
-  --font-body: 'DM Mono', monospace;
-  --font-head: 'Syne', sans-serif;
+  --font-body: 'Inter Variable', Inter, system-ui, sans-serif;
+  --font-head: 'Inter Variable', Inter, system-ui, sans-serif;
 }
 
 :root {
