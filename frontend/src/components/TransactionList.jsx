@@ -23,10 +23,10 @@ function MerchantIcon({ name }) {
   return (
     <div style={{
       width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-      background: `hsl(${hue}, 30%, 20%)`,
-      border: `1px solid hsl(${hue}, 30%, 30%)`,
+      background: `hsl(${hue}, 30%, var(--hue-bg-l))`,
+      border: `1px solid hsl(${hue}, 30%, var(--hue-border-l))`,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 11, fontWeight: 600, color: `hsl(${hue}, 60%, 70%)`,
+      fontSize: 11, fontWeight: 600, color: `hsl(${hue}, 60%, var(--hue-text-l))`,
       fontFamily: 'var(--font-head)',
     }}>
       {initials}
@@ -53,9 +53,9 @@ function InstitutionBadge({ name, mask }) {
   return (
     <span style={{
       fontSize: 10, padding: '3px 8px', borderRadius: 20, whiteSpace: 'nowrap',
-      background: `hsl(${hue}, 30%, 15%)`,
-      border: `1px solid hsl(${hue}, 30%, 25%)`,
-      color: `hsl(${hue}, 60%, 65%)`,
+      background: `hsl(${hue}, 30%, var(--hue-bg-l))`,
+      border: `1px solid hsl(${hue}, 30%, var(--hue-border-l))`,
+      color: `hsl(${hue}, 60%, var(--hue-text-l))`,
       letterSpacing: '0.04em',
     }}>
       {name}{mask ? ` ••${mask}` : ''}

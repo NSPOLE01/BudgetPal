@@ -3,19 +3,31 @@ import supabase from '../lib/supabase.js'
 
 const router = Router()
 
+// Merchants excluded from all queries and calculations
+const EXCLUDED_MERCHANTS = ['MTA']
+
+const applyExclusions = (query) => {
+  for (const name of EXCLUDED_MERCHANTS) {
+    query = query.not('name', 'ilike', `${name}%`)
+  }
+  return query
+}
+
 // GET /api/transactions?limit=50&offset=0&category=Food&start=2024-01-01&end=2024-01-31
 router.get('/', async (req, res) => {
   try {
     const { limit = 50, offset = 0, category, start, end, account_id, min_amount, max_amount } = req.query
 
-    let query = supabase
-      .from('transactions')
-      .select('*, accounts!inner(name, mask, items!inner(institution_name))')
-      .order('date', { ascending: false })
-      .order('created_at', { ascending: false })
-      .eq('pending', false)
-      .gt('amount', 0)
-      .range(Number(offset), Number(offset) + Number(limit) - 1)
+    let query = applyExclusions(
+      supabase
+        .from('transactions')
+        .select('*, accounts!inner(name, mask, items!inner(institution_name))')
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .eq('pending', false)
+        .gt('amount', 0)
+        .range(Number(offset), Number(offset) + Number(limit) - 1)
+    )
 
     if (category)    query = query.eq('category', category)
     if (start)       query = query.gte('date', start)
@@ -60,11 +72,13 @@ router.get('/summary', async (req, res) => {
     const chartStart = req.query.chartStart || monthStartStr
     const fetchStart = chartStart < monthStartStr ? chartStart : monthStartStr
 
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('amount, date, category')
-      .gte('date', fetchStart)
-      .eq('pending', false)
+    const { data, error } = await applyExclusions(
+      supabase
+        .from('transactions')
+        .select('amount, date, category')
+        .gte('date', fetchStart)
+        .eq('pending', false)
+    )
 
     if (error) throw error
 
@@ -107,12 +121,14 @@ router.get('/summary', async (req, res) => {
 // GET /api/transactions/monthly — total spend grouped by calendar month, oldest first
 router.get('/monthly', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('amount, date')
-      .eq('pending', false)
-      .gt('amount', 0)
-      .order('date', { ascending: true })
+    const { data, error } = await applyExclusions(
+      supabase
+        .from('transactions')
+        .select('amount, date')
+        .eq('pending', false)
+        .gt('amount', 0)
+        .order('date', { ascending: true })
+    )
 
     if (error) throw error
 

@@ -17,6 +17,12 @@
   --font-head: 'Syne', sans-serif;
 }
 
+:root {
+  --hue-bg-l:     20%;
+  --hue-border-l: 30%;
+  --hue-text-l:   70%;
+}
+
 :root[data-theme='light'] {
   --bg:        #f5f5f8;
   --bg-2:      #ffffff;
@@ -26,6 +32,9 @@
   --text:      #111118;
   --text-2:    #555568;
   --text-3:    #9999aa;
+  --hue-bg-l:     88%;
+  --hue-border-l: 75%;
+  --hue-text-l:   32%;
 }
 
 html, body, #root {
