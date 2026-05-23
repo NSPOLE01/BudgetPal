@@ -148,7 +148,7 @@ export default function Dashboard({ connected, onConnected }) {
             fontSize: 14, fontWeight: 800, fontFamily: 'var(--font-head)', color: 'var(--bg)',
           }}>B</div>
           <span style={{ fontFamily: 'var(--font-head)', fontWeight: 700, fontSize: 18, letterSpacing: '-0.02em' }}>
-            BudgetPal
+            Tally
           </span>
         </div>
 

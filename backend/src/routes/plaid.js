@@ -10,8 +10,8 @@ const router = Router()
 router.post('/create-link-token', async (req, res) => {
   try {
     const response = await plaidClient.linkTokenCreate({
-      user: { client_user_id: 'budgetpal-user' },
-      client_name: 'BudgetPal',
+      user: { client_user_id: 'tally-user' },
+      client_name: 'Tally',
       products: [Products.Transactions],
       country_codes: [CountryCode.Us],
       language: 'en',
