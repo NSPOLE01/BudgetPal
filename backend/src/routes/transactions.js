@@ -5,10 +5,14 @@ const router = Router()
 
 // Merchants excluded from all queries and calculations
 const EXCLUDED_MERCHANTS = ['MTA']
+const EXCLUDED_NAMES = ['ANNUAL MEMBERSHIP FEE']
 
 const applyExclusions = (query) => {
   for (const name of EXCLUDED_MERCHANTS) {
     query = query.not('name', 'ilike', `${name}%`)
+  }
+  for (const name of EXCLUDED_NAMES) {
+    query = query.not('name', 'ilike', `%${name}%`)
   }
   return query
 }
