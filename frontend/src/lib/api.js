@@ -51,3 +51,9 @@ export const getMonthlyTotals = () =>
 
 export const deleteTransaction = (id) =>
   request(`/api/transactions/${id}`, { method: 'DELETE' })
+
+export const createTransaction = (fields) =>
+  request('/api/transactions', {
+    method: 'POST',
+    body: JSON.stringify(fields),
+  })

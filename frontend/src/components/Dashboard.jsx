@@ -5,6 +5,7 @@ import CategoryChart from './CategoryChart.jsx'
 import MonthlyChart from './MonthlyChart.jsx'
 import TransactionList from './TransactionList.jsx'
 import TransactionFilters from './TransactionFilters.jsx'
+import AddTransactionModal from './AddTransactionModal.jsx'
 import Toast from './Toast.jsx'
 import { getSpendingSummary, getTransactions, getMonthlyTotals, syncTransactions } from '../lib/api.js'
 import supabase from '../lib/supabase.js'
@@ -32,6 +33,7 @@ export default function Dashboard({ connected, onConnected }) {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
   const [toast, setToast] = useState(null)
   const [filters, setFilters] = useState({ account_id: '', start: '', end: '', min_amount: '', max_amount: '' })
+  const [showAddModal, setShowAddModal] = useState(false)
   const realtimeBuffer = useRef(0)
   const realtimeTimer = useRef(null)
 
@@ -125,6 +127,20 @@ export default function Dashboard({ connected, onConnected }) {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
+      {showAddModal && (
+        <AddTransactionModal
+          onClose={() => setShowAddModal(false)}
+          onCreated={(tx) => {
+            setTransactions((prev) => [tx, ...prev])
+            const months = TIMEFRAMES.find((t) => t.label === chartTimeframe)?.months ?? 1
+            Promise.all([
+              getSpendingSummary(getChartStart(months)),
+              getMonthlyTotals(),
+            ]).then(([s, m]) => { setSummary(s); setMonthlyTotals(m) }).catch(() => {})
+            showToast('Transaction added')
+          }}
+        />
+      )}
       {/* Top bar */}
       <header style={{
         position: 'sticky',
@@ -293,11 +309,35 @@ export default function Dashboard({ connected, onConnected }) {
                 <h2 style={{ fontFamily: 'var(--font-head)', fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em' }}>
                   Transactions
                 </h2>
-                {lastSync && (
-                  <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
-                    Updated {lastSync.toLocaleTimeString()}
-                  </span>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {lastSync && (
+                    <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
+                      Updated {lastSync.toLocaleTimeString()}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      padding: '5px 12px',
+                      background: 'var(--bg-3)',
+                      border: '1px solid var(--border-2)',
+                      borderRadius: 8,
+                      color: 'var(--text-2)',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-2)'; e.currentTarget.style.color = 'var(--text-2)' }}
+                  >
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                      <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                    </svg>
+                    Add
+                  </button>
+                </div>
               </div>
               <TransactionFilters filters={filters} onChange={(f) => { setFilters(f); load(chartTimeframe, f) }} />
               <TransactionList

@@ -154,6 +154,44 @@ router.get('/monthly', async (req, res) => {
   }
 })
 
+// POST /api/transactions — create a manual transaction
+router.post('/', async (req, res) => {
+  const { merchant_name, name, amount, date, category, plaid_account_id } = req.body
+  if (!name || !amount || !date || !plaid_account_id) {
+    return res.status(400).json({ error: 'name, amount, date and plaid_account_id are required' })
+  }
+  try {
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert({
+        plaid_transaction_id: `manual-${crypto.randomUUID()}`,
+        plaid_account_id,
+        merchant_name: merchant_name || null,
+        name,
+        amount: Math.abs(Number(amount)),
+        date,
+        category: category || null,
+        pending: false,
+        user_modified: true,
+      })
+      .select('*, accounts!inner(name, mask, items!inner(institution_name))')
+      .single()
+
+    if (error) throw error
+
+    const { accounts, ...tx } = data
+    res.json({
+      ...tx,
+      institution_name: accounts?.items?.institution_name ?? null,
+      account_name: accounts?.name ?? null,
+      account_mask: accounts?.mask ?? null,
+    })
+  } catch (err) {
+    console.error('create transaction error:', err.message)
+    res.status(500).json({ error: 'Failed to create transaction' })
+  }
+})
+
 // DELETE /api/transactions/:id
 router.delete('/:id', async (req, res) => {
   try {
