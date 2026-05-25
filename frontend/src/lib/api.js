@@ -49,6 +49,9 @@ export const updateTransaction = (id, fields) =>
 export const getMonthlyTotals = () =>
   request('/api/transactions/monthly')
 
+export const getDailyTotals = (year, month) =>
+  request(`/api/transactions/daily?year=${year}&month=${month}`)
+
 export const deleteTransaction = (id) =>
   request(`/api/transactions/${id}`, { method: 'DELETE' })
 

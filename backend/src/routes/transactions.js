@@ -5,7 +5,7 @@ const router = Router()
 
 // Merchants excluded from all queries and calculations
 const EXCLUDED_MERCHANTS = ['MTA']
-const EXCLUDED_NAMES = ['ANNUAL MEMBERSHIP FEE']
+const EXCLUDED_NAMES = ['ANNUAL MEMBERSHIP FEE', 'RENEWAL MEMBERSHIP FEE']
 
 const applyExclusions = (query) => {
   for (const name of EXCLUDED_MERCHANTS) {
@@ -119,6 +119,43 @@ router.get('/summary', async (req, res) => {
   } catch (err) {
     console.error('summary error:', err.message)
     res.status(500).json({ error: 'Failed to fetch summary' })
+  }
+})
+
+// GET /api/transactions/daily?year=2026&month=5 — spend per day for a given month
+router.get('/daily', async (req, res) => {
+  try {
+    const now = new Date()
+    const year  = Number(req.query.year  || now.getFullYear())
+    const month = Number(req.query.month || now.getMonth() + 1)
+    const start = `${year}-${String(month).padStart(2, '0')}-01`
+    const end   = new Date(year, month, 0).toISOString().split('T')[0] // last day of month
+
+    const { data, error } = await applyExclusions(
+      supabase
+        .from('transactions')
+        .select('amount, date')
+        .gte('date', start)
+        .lte('date', end)
+        .eq('pending', false)
+        .gt('amount', 0)
+    )
+    if (error) throw error
+
+    const dayMap = {}
+    for (const tx of data) {
+      dayMap[tx.date] = (dayMap[tx.date] || 0) + tx.amount
+    }
+
+    const daily = Object.entries(dayMap).map(([date, total]) => ({
+      date,
+      total: Math.round(total * 100) / 100,
+    }))
+
+    res.json(daily)
+  } catch (err) {
+    console.error('daily error:', err.message)
+    res.status(500).json({ error: 'Failed to fetch daily totals' })
   }
 })
 

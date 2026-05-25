@@ -6,6 +6,7 @@ import MonthlyChart from './MonthlyChart.jsx'
 import TransactionList from './TransactionList.jsx'
 import TransactionFilters from './TransactionFilters.jsx'
 import AddTransactionModal from './AddTransactionModal.jsx'
+import CalendarView from './CalendarView.jsx'
 import Toast from './Toast.jsx'
 import { getSpendingSummary, getTransactions, getMonthlyTotals, syncTransactions } from '../lib/api.js'
 import supabase from '../lib/supabase.js'
@@ -258,6 +259,17 @@ export default function Dashboard({ connected, onConnected }) {
                 <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Since first transaction</span>
               </div>
               <MonthlyChart data={monthlyTotals} />
+            </section>
+
+            {/* Calendar */}
+            <section style={{
+              marginBottom: 40,
+              background: 'var(--bg-2)',
+              border: '1px solid var(--border)',
+              borderRadius: 16,
+              padding: '28px 32px',
+            }}>
+              <CalendarView />
             </section>
 
             {/* Category chart */}
