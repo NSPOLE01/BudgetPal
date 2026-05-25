@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { getAccounts } from '../lib/api.js'
 
+const getMonthRange = () => {
+  const now = new Date()
+  const start = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+  const end = now.toISOString().split('T')[0]
+  return { start, end }
+}
+
 const inputStyle = {
   background: 'var(--bg)',
   border: '1px solid var(--border-2)',
@@ -122,6 +129,30 @@ export default function TransactionFilters({ filters, onChange }) {
           onBlur={(e) => e.target.style.borderColor = 'var(--border-2)'}
         />
       </FilterGroup>
+
+      {/* This Month quick filter */}
+      <button
+        onClick={() => onChange({ ...filters, ...getMonthRange() })}
+        style={{
+          alignSelf: 'flex-end',
+          padding: '7px 14px',
+          background: filters.start === getMonthRange().start && filters.end === getMonthRange().end
+            ? 'var(--accent)'
+            : 'none',
+          border: `1px solid ${filters.start === getMonthRange().start && filters.end === getMonthRange().end ? 'var(--accent)' : 'var(--border-2)'}`,
+          borderRadius: 8,
+          color: filters.start === getMonthRange().start && filters.end === getMonthRange().end
+            ? '#fff'
+            : 'var(--text-2)',
+          fontFamily: 'var(--font-body)',
+          fontSize: 12,
+          cursor: 'pointer',
+          transition: 'all 0.15s',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        This Month
+      </button>
 
       {/* Clear button — only shown when a filter is active */}
       {hasFilters && (
