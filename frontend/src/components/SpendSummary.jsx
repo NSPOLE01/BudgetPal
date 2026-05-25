@@ -1,8 +1,5 @@
-const fmt = (n) => {
-  const v = n ?? 0
-  if (v >= 1000) return `$${(v / 1000).toFixed(1).replace(/\.0$/, '')}K`
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v)
-}
+const fmt = (n) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n ?? 0)
 
 function Card({ label, amount, large, delay }) {
   return (
