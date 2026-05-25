@@ -34,6 +34,7 @@ export default function Dashboard({ connected, onConnected }) {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
   const [toast, setToast] = useState(null)
   const [filters, setFilters] = useState({ account_id: '', start: '', end: '', min_amount: '', max_amount: '' })
+  const [maxTransactionAmount, setMaxTransactionAmount] = useState(500)
   const [showAddModal, setShowAddModal] = useState(false)
   const realtimeBuffer = useRef(0)
   const realtimeTimer = useRef(null)
@@ -58,7 +59,11 @@ export default function Dashboard({ connected, onConnected }) {
         getMonthlyTotals(),
       ])
       setSummary(s)
-      setTransactions(t.transactions ?? [])
+      const txList = t.transactions ?? []
+      setTransactions(txList)
+      if (txList.length > 0) {
+        setMaxTransactionAmount((prev) => Math.max(prev, Math.ceil(Math.max(...txList.map((tx) => tx.amount)))))
+      }
       setMonthlyTotals(m)
     } catch (e) {
       setError(e.message)
@@ -351,7 +356,11 @@ export default function Dashboard({ connected, onConnected }) {
                   </button>
                 </div>
               </div>
-              <TransactionFilters filters={filters} onChange={(f) => { setFilters(f); load(chartTimeframe, f) }} />
+              <TransactionFilters
+                filters={filters}
+                onChange={(f) => { setFilters(f); load(chartTimeframe, f) }}
+                maxAmount={maxTransactionAmount}
+              />
               <TransactionList
                 transactions={transactions}
                 onTransactionUpdated={(updated) => {

@@ -64,3 +64,44 @@ html, body, #root {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+
+/* Dual-range slider */
+.range-slider input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  background: transparent;
+  pointer-events: none;
+  outline: none;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 0;
+}
+.range-slider input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  pointer-events: all;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1.5px var(--accent);
+  transition: transform 0.1s;
+}
+.range-slider input[type=range]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+.range-slider input[type=range]::-moz-range-thumb {
+  pointer-events: all;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg);
+  box-sizing: border-box;
+}
