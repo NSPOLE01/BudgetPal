@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { getDailyTotals } from '../lib/api.js'
+import { useEffect, useState, useRef } from 'react'
+import { getDailyTotals, getTransactions } from '../lib/api.js'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -19,6 +19,10 @@ export default function CalendarView() {
   const [month, setMonth] = useState(today.getMonth() + 1)
   const [dailyMap, setDailyMap] = useState({})
   const [loading, setLoading]   = useState(false)
+  const [selectedDay, setSelectedDay]   = useState(null) // 'YYYY-MM-DD'
+  const [dayTxns, setDayTxns]           = useState([])
+  const [dayTxLoading, setDayTxLoading] = useState(false)
+  const overlayRef = useRef(null)
 
   useEffect(() => {
     setLoading(true)
@@ -31,6 +35,17 @@ export default function CalendarView() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [year, month])
+
+  const openDay = (dateStr) => {
+    if (dateStr > todayStr) return
+    setSelectedDay(dateStr)
+    setDayTxns([])
+    setDayTxLoading(true)
+    getTransactions({ start: dateStr, end: dateStr, limit: 100 })
+      .then((r) => setDayTxns(r.transactions ?? []))
+      .catch(() => {})
+      .finally(() => setDayTxLoading(false))
+  }
 
   const prevMonth = () => {
     if (month === 1) { setYear(y => y - 1); setMonth(12) }
@@ -97,6 +112,7 @@ export default function CalendarView() {
             <div
               key={day}
               title={amount ? `${fmt(amount)}` : undefined}
+              onClick={() => !isFuture && openDay(dateStr)}
               style={{
                 borderRadius: 10,
                 padding: '10px 6px 8px',
@@ -108,14 +124,16 @@ export default function CalendarView() {
                   ? '1.5px solid var(--accent)'
                   : '1px solid transparent',
                 opacity: isFuture ? 0.35 : 1,
-                transition: 'background 0.15s',
-                cursor: amount ? 'default' : 'default',
+                transition: 'background 0.15s, box-shadow 0.15s',
+                cursor: isFuture ? 'default' : 'pointer',
                 minHeight: 64,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
+              onMouseEnter={(e) => { if (!isFuture) e.currentTarget.style.boxShadow = '0 0 0 1.5px var(--accent)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none' }}
             >
               <span style={{
                 fontSize: 12,
@@ -138,6 +156,101 @@ export default function CalendarView() {
           )
         })}
       </div>
+      {/* Day detail modal */}
+      {selectedDay && (
+        <div
+          ref={overlayRef}
+          onClick={(e) => { if (e.target === overlayRef.current) setSelectedDay(null) }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'fadeUp 0.2s ease both',
+          }}
+        >
+          <div style={{
+            background: 'var(--bg-2)',
+            border: '1px solid var(--border)',
+            borderRadius: 16,
+            width: 420,
+            maxWidth: '90vw',
+            maxHeight: '70vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}>
+            {/* Modal header */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '20px 24px 16px',
+              borderBottom: '1px solid var(--border)',
+            }}>
+              <div>
+                <p style={{ fontSize: 11, color: 'var(--text-3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
+                  Daily Spend
+                </p>
+                <h3 style={{ fontFamily: 'var(--font-head)', fontSize: 17, fontWeight: 600, letterSpacing: '-0.01em' }}>
+                  {new Date(selectedDay + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                </h3>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                {dailyMap[selectedDay] > 0 && (
+                  <span style={{ fontFamily: 'var(--font-head)', fontSize: 20, fontWeight: 700, color: 'var(--red)', letterSpacing: '-0.02em' }}>
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(dailyMap[selectedDay])}
+                  </span>
+                )}
+                <button
+                  onClick={() => setSelectedDay(null)}
+                  style={{
+                    background: 'var(--bg-3)', border: '1px solid var(--border-2)',
+                    borderRadius: 8, color: 'var(--text-2)', cursor: 'pointer',
+                    width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 16, lineHeight: 1,
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Transaction list */}
+            <div style={{ overflowY: 'auto', flex: 1, padding: '8px 0' }}>
+              {dayTxLoading ? (
+                <p style={{ textAlign: 'center', padding: 32, color: 'var(--text-3)', fontSize: 13 }}>Loading…</p>
+              ) : dayTxns.length === 0 ? (
+                <p style={{ textAlign: 'center', padding: 32, color: 'var(--text-3)', fontSize: 13 }}>No transactions</p>
+              ) : (
+                dayTxns.map((tx) => (
+                  <div key={tx.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 24px',
+                    borderBottom: '1px solid var(--border)',
+                  }}>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {tx.merchant_name || tx.name}
+                      </p>
+                      {tx.category && (
+                        <span style={{
+                          fontSize: 10, padding: '2px 7px',
+                          background: 'var(--bg-3)', border: '1px solid var(--border-2)',
+                          borderRadius: 5, color: 'var(--text-3)', letterSpacing: '0.04em',
+                        }}>
+                          {tx.category}
+                        </span>
+                      )}
+                    </div>
+                    <span style={{ fontFamily: 'var(--font-head)', fontSize: 14, fontWeight: 600, color: 'var(--red)', marginLeft: 16, whiteSpace: 'nowrap' }}>
+                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
