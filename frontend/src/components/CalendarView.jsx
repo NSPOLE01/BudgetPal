@@ -70,18 +70,31 @@ export default function CalendarView() {
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
 
   const maxSpend = Math.max(...Object.values(dailyMap), 1)
+  const monthTotal = Object.values(dailyMap).reduce((sum, v) => sum + v, 0)
   const todayStr = today.toISOString().split('T')[0]
+
+  const fmtTotal = (n) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
 
   return (
     <div style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <button onClick={prevMonth} style={navBtn}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        <span style={{ fontFamily: 'var(--font-head)', fontSize: 15, fontWeight: 600 }}>{monthLabel}</span>
+
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: 11, color: 'var(--text-3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
+            {monthLabel}
+          </p>
+          <p style={{ fontFamily: 'var(--font-head)', fontSize: 36, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1, color: 'var(--text)' }}>
+            {fmtTotal(monthTotal)}
+          </p>
+        </div>
+
         <button onClick={nextMonth} disabled={isCurrentMonth} style={{ ...navBtn, opacity: isCurrentMonth ? 0.3 : 1 }}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
