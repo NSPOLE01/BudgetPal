@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { updateTransaction, deleteTransaction } from '../lib/api.js'
 
 const CATEGORIES = [
@@ -88,10 +88,169 @@ const iconBtnStyle = {
   flexShrink: 0,
 }
 
+function EditModal({ tx, onSave, onClose }) {
+  const [draft, setDraft] = useState({
+    category: tx.category || '',
+    date: tx.date,
+    amount: Math.abs(tx.amount),
+  })
+  const [saving, setSaving] = useState(false)
+  const overlayRef = useRef(null)
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      const updated = await updateTransaction(tx.id, {
+        category: draft.category || null,
+        date: draft.date,
+        amount: tx.amount >= 0 ? Math.abs(draft.amount) : -Math.abs(draft.amount),
+      })
+      onSave(updated)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const fieldLabel = {
+    fontSize: 11, color: 'var(--text-3)', letterSpacing: '0.08em',
+    textTransform: 'uppercase', marginBottom: 6, display: 'block',
+  }
+
+  const field = {
+    ...inputStyle,
+    width: '100%',
+    padding: '9px 12px',
+    fontSize: 13,
+    borderRadius: 8,
+  }
+
+  return (
+    <div
+      ref={overlayRef}
+      onClick={(e) => { if (e.target === overlayRef.current) onClose() }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 50,
+        background: 'rgba(0,0,0,0.55)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        animation: 'fadeUp 0.2s ease both',
+      }}
+    >
+      <div style={{
+        background: 'var(--bg-2)',
+        border: '1px solid var(--border)',
+        borderRadius: 16,
+        width: 400,
+        maxWidth: '90vw',
+        overflow: 'hidden',
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '20px 24px',
+          borderBottom: '1px solid var(--border)',
+        }}>
+          <MerchantIcon name={tx.merchant_name || tx.name} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {tx.merchant_name || tx.name}
+            </p>
+            {tx.merchant_name && tx.name !== tx.merchant_name && (
+              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {tx.name}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'var(--bg-3)', border: '1px solid var(--border-2)',
+              borderRadius: 8, color: 'var(--text-2)', cursor: 'pointer',
+              width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 16, lineHeight: 1, flexShrink: 0,
+            }}
+          >×</button>
+        </div>
+
+        {/* Fields */}
+        <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={fieldLabel}>Category</label>
+            <select
+              value={draft.category}
+              onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
+              style={field}
+            >
+              <option value="">— No category —</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{fmtLabel(c)}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={fieldLabel}>Date</label>
+            <input
+              type="date"
+              value={draft.date}
+              onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))}
+              style={field}
+            />
+          </div>
+
+          <div>
+            <label style={fieldLabel}>Amount ($)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={draft.amount}
+              onChange={(e) => setDraft((d) => ({ ...d, amount: e.target.value }))}
+              style={field}
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          display: 'flex', justifyContent: 'flex-end', gap: 8,
+          padding: '0 24px 20px',
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
+              background: 'none', border: '1px solid var(--border-2)',
+              color: 'var(--text-2)', fontFamily: 'var(--font-body)', fontSize: 13,
+              transition: 'all 0.12s',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--text-2)'}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-2)'}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={save}
+            disabled={saving}
+            style={{
+              padding: '8px 20px', borderRadius: 8, cursor: saving ? 'not-allowed' : 'pointer',
+              background: 'var(--accent)', border: '1px solid var(--accent)',
+              color: '#fff', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500,
+              opacity: saving ? 0.7 : 1, transition: 'opacity 0.12s',
+            }}
+          >
+            {saving ? 'Saving…' : 'Save changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function TransactionRow({ tx, onUpdated, onDeleted }) {
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState({})
-  const [saving, setSaving] = useState(false)
   const [hovered, setHovered] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -109,95 +268,15 @@ function TransactionRow({ tx, onUpdated, onDeleted }) {
     }
   }
 
-  const startEdit = () => {
-    setDraft({ category: tx.category || '', date: tx.date, amount: Math.abs(tx.amount) })
-    setEditing(true)
-  }
-
-  const cancel = () => { setEditing(false); setDraft({}) }
-
-  const save = async () => {
-    setSaving(true)
-    try {
-      const fields = {
-        category: draft.category || null,
-        date: draft.date,
-        // preserve sign (positive = debit)
-        amount: tx.amount >= 0 ? Math.abs(draft.amount) : -Math.abs(draft.amount),
-      }
-      const updated = await updateTransaction(tx.id, fields)
-      onUpdated(updated)
-      setEditing(false)
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  if (editing) {
-    return (
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '10px 16px', borderRadius: 10,
-        background: 'var(--bg-3)', border: '1px solid var(--border-2)',
-      }}>
-        <MerchantIcon name={tx.merchant_name || tx.name} />
-
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 13, color: 'var(--text)', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {tx.merchant_name || tx.name}
-          </p>
-          <select
-            value={draft.category}
-            onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
-            style={{ ...inputStyle, width: '100%' }}
-          >
-            <option value="">— No category —</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>{fmtLabel(c)}</option>
-            ))}
-          </select>
-        </div>
-
-        <input
-          type="date"
-          value={draft.date}
-          onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))}
-          style={{ ...inputStyle, width: 130 }}
-        />
-
-        <input
-          type="number"
-          min="0"
-          step="0.01"
-          value={draft.amount}
-          onChange={(e) => setDraft((d) => ({ ...d, amount: e.target.value }))}
-          style={{ ...inputStyle, width: 88, textAlign: 'right' }}
-        />
-
-        <div style={{ display: 'flex', gap: 4 }}>
-          <button
-            onClick={save}
-            disabled={saving}
-            style={{ ...iconBtnStyle, color: 'var(--green)' }}
-            title="Save"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8l3.5 3.5L13 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <button onClick={cancel} style={{ ...iconBtnStyle, color: 'var(--red)' }} title="Cancel">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   return (
+    <>
+      {editing && (
+        <EditModal
+          tx={tx}
+          onSave={(updated) => { onUpdated(updated); setEditing(false) }}
+          onClose={() => setEditing(false)}
+        />
+      )}
     <div
       style={{
         display: 'flex', alignItems: 'center', gap: 14,
@@ -234,7 +313,7 @@ function TransactionRow({ tx, onUpdated, onDeleted }) {
 
       <div style={{ display: 'flex', gap: 2, opacity: hovered ? 1 : 0, transition: 'opacity 0.12s' }}>
         <button
-          onClick={startEdit}
+          onClick={() => setEditing(true)}
           style={iconBtnStyle}
           title="Edit"
           onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
@@ -268,6 +347,7 @@ function TransactionRow({ tx, onUpdated, onDeleted }) {
         </button>
       </div>
     </div>
+    </>
   )
 }
 
