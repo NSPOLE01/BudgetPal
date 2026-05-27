@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { getDailyTotals, getTransactions } from '../lib/api.js'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -157,14 +158,14 @@ export default function CalendarView() {
         })}
       </div>
       {/* Day detail modal */}
-      {selectedDay && (
+      {selectedDay && createPortal(
         <div
           ref={overlayRef}
           onClick={(e) => { if (e.target === overlayRef.current) setSelectedDay(null) }}
           style={{
-            position: 'fixed', inset: 0, zIndex: 50,
-            background: 'rgba(0,0,0,0.55)',
-            backdropFilter: 'blur(4px)',
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(6px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             animation: 'fadeUp 0.2s ease both',
           }}
@@ -249,7 +250,8 @@ export default function CalendarView() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

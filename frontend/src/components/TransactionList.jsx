@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { updateTransaction, deleteTransaction } from '../lib/api.js'
 
 const CATEGORIES = [
@@ -126,14 +127,14 @@ function EditModal({ tx, onSave, onClose }) {
     borderRadius: 8,
   }
 
-  return (
+  return createPortal(
     <div
       ref={overlayRef}
       onClick={(e) => { if (e.target === overlayRef.current) onClose() }}
       style={{
-        position: 'fixed', inset: 0, zIndex: 50,
-        background: 'rgba(0,0,0,0.55)',
-        backdropFilter: 'blur(4px)',
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(0,0,0,0.6)',
+        backdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         animation: 'fadeUp 0.2s ease both',
       }}
@@ -245,7 +246,8 @@ function EditModal({ tx, onSave, onClose }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
