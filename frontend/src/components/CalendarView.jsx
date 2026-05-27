@@ -216,17 +216,17 @@ export default function CalendarView() {
             </div>
 
             {/* Transaction list */}
-            <div style={{ overflowY: 'auto', flex: 1, padding: '8px 0' }}>
+            <div style={{ overflowY: 'auto', flex: 1 }}>
               {dayTxLoading ? (
                 <p style={{ textAlign: 'center', padding: 32, color: 'var(--text-3)', fontSize: 13 }}>Loading…</p>
               ) : dayTxns.length === 0 ? (
                 <p style={{ textAlign: 'center', padding: 32, color: 'var(--text-3)', fontSize: 13 }}>No transactions</p>
               ) : (
-                dayTxns.map((tx) => (
+                dayTxns.map((tx, i) => (
                   <div key={tx.id} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '10px 24px',
-                    borderBottom: '1px solid var(--border)',
+                    padding: '12px 24px',
+                    borderBottom: i < dayTxns.length - 1 ? '1px solid var(--border)' : 'none',
                   }}>
                     <div style={{ minWidth: 0 }}>
                       <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -238,7 +238,7 @@ export default function CalendarView() {
                           background: 'var(--bg-3)', border: '1px solid var(--border-2)',
                           borderRadius: 5, color: 'var(--text-3)', letterSpacing: '0.04em',
                         }}>
-                          {tx.category}
+                          {tx.category.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                         </span>
                       )}
                     </div>
