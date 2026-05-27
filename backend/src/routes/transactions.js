@@ -244,12 +244,13 @@ router.delete('/:id', async (req, res) => {
 // PATCH /api/transactions/:id — edit category, date, or amount
 router.patch('/:id', async (req, res) => {
   const { id } = req.params
-  const { category, date, amount } = req.body
+  const { category, date, amount, split } = req.body
 
   const updates = { user_modified: true }
   if (category !== undefined) updates.category = category
   if (date !== undefined) updates.date = date
   if (amount !== undefined) updates.amount = Number(amount)
+  if (split !== undefined) updates.split = Boolean(split)
 
   if (Object.keys(updates).length === 1) {
     return res.status(400).json({ error: 'No valid fields to update' })

@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { Star } from 'lucide-react'
 import { updateTransaction, deleteTransaction } from '../lib/api.js'
 
 const CATEGORIES = [
@@ -256,6 +257,18 @@ function TransactionRow({ tx, onUpdated, onDeleted }) {
   const [hovered, setHovered] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [split, setSplit] = useState(tx.split ?? false)
+
+  const toggleSplit = async () => {
+    const next = !split
+    setSplit(next)
+    try {
+      await updateTransaction(tx.id, { split: next })
+    } catch (e) {
+      setSplit(!next)
+      console.error(e)
+    }
+  }
 
   const handleDelete = async () => {
     if (!confirmDelete) { setConfirmDelete(true); return }
@@ -289,6 +302,27 @@ function TransactionRow({ tx, onUpdated, onDeleted }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      {/* Split star — always rendered, fades unless active or hovered */}
+      <button
+        onClick={toggleSplit}
+        title={split ? 'Marked for split — click to unmark' : 'Mark as split'}
+        style={{
+          ...iconBtnStyle,
+          opacity: hovered || split ? 1 : 0,
+          transition: 'opacity 0.15s, color 0.12s',
+          color: split ? 'var(--accent)' : 'var(--text-3)',
+          flexShrink: 0,
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
+        onMouseLeave={(e) => e.currentTarget.style.color = split ? 'var(--accent)' : 'var(--text-3)'}
+      >
+        <Star
+          size={14}
+          fill={split ? 'var(--accent)' : 'none'}
+          strokeWidth={1.6}
+        />
+      </button>
+
       <MerchantIcon name={tx.merchant_name || tx.name} />
 
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -313,10 +347,26 @@ function TransactionRow({ tx, onUpdated, onDeleted }) {
         {tx.amount > 0 ? '-' : '+'}{fmt(tx.amount)}
       </p>
 
-      <div style={{ display: 'flex', gap: 2, opacity: hovered ? 1 : 0, transition: 'opacity 0.12s' }}>
+      <div style={{ display: 'flex', gap: 2 }}>
+        {/* Receipt, Edit, Delete — hover only */}
+        <button
+          onClick={() => window.open('https://billbuddyfrontend.vercel.app/', '_blank')}
+          title="Split in BillBuddy"
+          style={{ ...iconBtnStyle, opacity: hovered ? 1 : 0, transition: 'opacity 0.12s' }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-3)'}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 1.5h8v10.5l-1.33-.9-1.34.9L7 11.1l-1.33.9-1.34-.9L3 12V1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            <line x1="5" y1="4.5" x2="9" y2="4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            <line x1="5" y1="6.5" x2="9" y2="6.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            <line x1="5" y1="8.5" x2="7.5" y2="8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+          </svg>
+        </button>
+
         <button
           onClick={() => setEditing(true)}
-          style={iconBtnStyle}
+          style={{ ...iconBtnStyle, opacity: hovered ? 1 : 0, transition: 'opacity 0.12s' }}
           title="Edit"
           onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
           onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-3)'}
@@ -325,12 +375,15 @@ function TransactionRow({ tx, onUpdated, onDeleted }) {
             <path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
+
         <button
           onClick={handleDelete}
           disabled={deleting}
           title={confirmDelete ? 'Click again to confirm' : 'Delete'}
           style={{
             ...iconBtnStyle,
+            opacity: hovered ? 1 : 0,
+            transition: 'opacity 0.12s',
             color: confirmDelete ? 'var(--red)' : 'var(--text-3)',
           }}
           onMouseEnter={(e) => e.currentTarget.style.color = 'var(--red)'}
