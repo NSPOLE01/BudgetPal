@@ -261,11 +261,18 @@ router.patch('/:id', async (req, res) => {
       .from('transactions')
       .update(updates)
       .eq('id', id)
-      .select()
+      .select('*, accounts!inner(name, mask, items!inner(institution_name))')
       .single()
 
     if (error) throw error
-    res.json(data)
+
+    const { accounts, ...tx } = data
+    res.json({
+      ...tx,
+      institution_name: accounts?.items?.institution_name ?? null,
+      account_name: accounts?.name ?? null,
+      account_mask: accounts?.mask ?? null,
+    })
   } catch (err) {
     console.error('patch transaction error:', err.message)
     res.status(500).json({ error: 'Failed to update transaction' })
