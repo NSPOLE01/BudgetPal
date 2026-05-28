@@ -189,7 +189,7 @@ export default function AddTransactionModal({ onClose, onCreated }) {
             >
               {accounts.map((a) => (
                 <option key={a.plaid_account_id} value={a.plaid_account_id}>
-                  {a.institution_name} {a.mask ? `••${a.mask}` : a.name}
+                  {a.institution_name}{a.mask ? ` ••${a.mask}` : a.name && a.name !== a.institution_name ? ` ${a.name}` : ''}
                 </option>
               ))}
             </select>

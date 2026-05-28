@@ -125,7 +125,7 @@ export default function TransactionFilters({ filters, onChange, maxAmount = 500 
           <option value="">All cards</option>
           {accounts.map((a) => (
             <option key={a.plaid_account_id} value={a.plaid_account_id}>
-              {a.institution_name} {a.mask ? `••${a.mask}` : a.name}
+              {a.institution_name}{a.mask ? ` ••${a.mask}` : a.name && a.name !== a.institution_name ? ` ${a.name}` : ''}
             </option>
           ))}
         </select>
