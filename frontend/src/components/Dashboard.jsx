@@ -362,6 +362,33 @@ export default function Dashboard({ connected, onConnected }) {
                 onChange={(f) => { setFilters(f); load(chartTimeframe, f) }}
                 maxAmount={maxTransactionAmount}
               />
+              {(filters.account_id || filters.start || filters.end || filters.min_amount || filters.max_amount) && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 16px',
+                  marginBottom: 12,
+                  background: 'var(--bg-3)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 10,
+                }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                    {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
+                  </span>
+                  <span style={{
+                    fontFamily: 'var(--font-head)',
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: 'var(--text)',
+                    letterSpacing: '-0.02em',
+                  }}>
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(
+                      transactions.reduce((sum, tx) => sum + tx.amount, 0)
+                    )}
+                  </span>
+                </div>
+              )}
               <TransactionList
                 transactions={transactions}
                 onTransactionUpdated={(updated) => {
