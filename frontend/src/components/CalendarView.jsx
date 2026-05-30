@@ -14,7 +14,7 @@ function getIntensity(amount, max) {
   return Math.max(0.08, amount / max)
 }
 
-export default function CalendarView() {
+export default function CalendarView({ refreshKey = 0 }) {
   const today = new Date()
   const [year, setYear]   = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1)
@@ -35,7 +35,7 @@ export default function CalendarView() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [year, month])
+  }, [year, month, refreshKey])
 
   const openDay = (dateStr) => {
     if (dateStr > todayStr) return

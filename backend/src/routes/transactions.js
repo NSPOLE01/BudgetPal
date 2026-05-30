@@ -4,8 +4,8 @@ import supabase from '../lib/supabase.js'
 const router = Router()
 
 // Merchants excluded from all queries and calculations
-const EXCLUDED_MERCHANTS = ['MTA']
-const EXCLUDED_NAMES = ['ANNUAL MEMBERSHIP FEE', 'RENEWAL MEMBERSHIP FEE']
+const EXCLUDED_MERCHANTS = ['MTA', 'CONED BILL PAYMENT']
+const EXCLUDED_NAMES = ['ANNUAL MEMBERSHIP FEE', 'RENEWAL MEMBERSHIP FEE', 'CLAUDE.AI SUBSCRIPTION']
 
 const applyExclusions = (query) => {
   for (const name of EXCLUDED_MERCHANTS) {

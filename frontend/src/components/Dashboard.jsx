@@ -35,6 +35,7 @@ export default function Dashboard({ connected, onConnected }) {
   const [toast, setToast] = useState(null)
   const [filters, setFilters] = useState({ account_id: '', start: '', end: '', min_amount: '', max_amount: '' })
   const [maxTransactionAmount, setMaxTransactionAmount] = useState(500)
+  const [calendarKey, setCalendarKey] = useState(0)
   const [showAddModal, setShowAddModal] = useState(false)
   const realtimeBuffer = useRef(0)
   const realtimeTimer = useRef(null)
@@ -274,7 +275,7 @@ export default function Dashboard({ connected, onConnected }) {
               borderRadius: 16,
               padding: '28px 32px',
             }}>
-              <CalendarView />
+              <CalendarView refreshKey={calendarKey} />
             </section>
 
             {/* Category chart */}
@@ -365,11 +366,13 @@ export default function Dashboard({ connected, onConnected }) {
                 transactions={transactions}
                 onTransactionUpdated={(updated) => {
                   setTransactions((prev) => prev.map((tx) => tx.id === updated.id ? updated : tx))
+                  setCalendarKey((k) => k + 1)
                   const months = TIMEFRAMES.find((t) => t.label === chartTimeframe)?.months ?? 1
                   getSpendingSummary(getChartStart(months)).then(setSummary).catch(() => {})
                 }}
                 onTransactionDeleted={(id) => {
                   setTransactions((prev) => prev.filter((tx) => tx.id !== id))
+                  setCalendarKey((k) => k + 1)
                   const months = TIMEFRAMES.find((t) => t.label === chartTimeframe)?.months ?? 1
                   Promise.all([
                     getSpendingSummary(getChartStart(months)),

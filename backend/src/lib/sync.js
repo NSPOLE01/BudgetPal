@@ -2,7 +2,10 @@ import plaidClient from './plaid.js'
 import supabase from './supabase.js'
 
 export async function syncAllItems() {
-  const { data: items, error } = await supabase.from('items').select('*')
+  const { data: items, error } = await supabase
+    .from('items')
+    .select('*')
+    .like('plaid_access_token', 'access-%')
   if (error) throw error
   if (!items.length) return { synced: 0 }
 
