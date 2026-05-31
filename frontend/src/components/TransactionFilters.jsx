@@ -55,7 +55,7 @@ function AmountRangeSlider({ minVal, maxVal, maxAmount, onChange }) {
   const hiPercent = maxAmount > 0 ? (hi / maxAmount) * 100 : 100
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 220 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: 130, flexShrink: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <span style={labelStyle}>Amount</span>
         <span style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'var(--font-body)', letterSpacing: 0 }}>
@@ -114,10 +114,10 @@ export default function TransactionFilters({ filters, onChange, maxAmount = 500 
   return (
     <div style={{
       display: 'flex',
-      gap: 16,
+      gap: 10,
       alignItems: 'flex-end',
-      flexWrap: 'wrap',
-      padding: '16px 20px',
+      flexWrap: 'nowrap',
+      padding: '12px 16px',
       background: 'var(--bg)',
       border: '1px solid var(--border)',
       borderRadius: 12,
@@ -129,7 +129,7 @@ export default function TransactionFilters({ filters, onChange, maxAmount = 500 
         <select
           value={filters.account_id || ''}
           onChange={(e) => set('account_id', e.target.value)}
-          style={{ ...inputStyle, width: 200 }}
+          style={{ ...inputStyle, width: 136 }}
         >
           <option value="">All cards</option>
           {accounts.map((a) => (
@@ -145,7 +145,7 @@ export default function TransactionFilters({ filters, onChange, maxAmount = 500 
         <select
           value={filters.category || ''}
           onChange={(e) => set('category', e.target.value)}
-          style={{ ...inputStyle, width: 180 }}
+          style={{ ...inputStyle, width: 148 }}
         >
           <option value="">All categories</option>
           {CATEGORIES.map((c) => (
@@ -160,7 +160,7 @@ export default function TransactionFilters({ filters, onChange, maxAmount = 500 
           type="date"
           value={filters.start || ''}
           onChange={(e) => set('start', e.target.value)}
-          style={{ ...inputStyle, width: 148 }}
+          style={{ ...inputStyle, width: 116 }}
           onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
           onBlur={(e) => e.target.style.borderColor = 'var(--border-2)'}
         />
@@ -171,7 +171,7 @@ export default function TransactionFilters({ filters, onChange, maxAmount = 500 
           type="date"
           value={filters.end || ''}
           onChange={(e) => set('end', e.target.value)}
-          style={{ ...inputStyle, width: 148 }}
+          style={{ ...inputStyle, width: 116 }}
           onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
           onBlur={(e) => e.target.style.borderColor = 'var(--border-2)'}
         />
@@ -190,7 +190,7 @@ export default function TransactionFilters({ filters, onChange, maxAmount = 500 
         onClick={() => onChange({ ...filters, ...getMonthRange() })}
         style={{
           alignSelf: 'flex-end',
-          padding: '7px 14px',
+          padding: '7px 10px',
           background: filters.start === getMonthRange().start && filters.end === getMonthRange().end
             ? 'var(--accent)'
             : 'none',
@@ -215,7 +215,7 @@ export default function TransactionFilters({ filters, onChange, maxAmount = 500 
           onClick={() => onChange({ account_id: '', category: '', start: '', end: '', min_amount: '', max_amount: '' })}
           style={{
             alignSelf: 'flex-end',
-            padding: '7px 14px',
+            padding: '7px 10px',
             background: 'none',
             border: '1px solid var(--border-2)',
             borderRadius: 8,
