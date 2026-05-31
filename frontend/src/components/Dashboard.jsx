@@ -33,7 +33,7 @@ export default function Dashboard({ connected, onConnected }) {
   const [monthlyTotals, setMonthlyTotals] = useState([])
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
   const [toast, setToast] = useState(null)
-  const [filters, setFilters] = useState({ account_id: '', start: '', end: '', min_amount: '', max_amount: '' })
+  const [filters, setFilters] = useState({ account_id: '', category: '', start: '', end: '', min_amount: '', max_amount: '' })
   const [maxTransactionAmount, setMaxTransactionAmount] = useState(500)
   const [calendarKey, setCalendarKey] = useState(0)
   const [showAddModal, setShowAddModal] = useState(false)

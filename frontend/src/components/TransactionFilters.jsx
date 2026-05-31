@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
 import { getAccounts } from '../lib/api.js'
 
+const CATEGORIES = [
+  'FOOD_AND_DRINK', 'SHOPS', 'TRANSPORTATION', 'TRAVEL', 'ENTERTAINMENT',
+  'HEALTH_FITNESS', 'PERSONAL_CARE', 'GENERAL_MERCHANDISE', 'HOME_IMPROVEMENT',
+  'UTILITIES', 'SUBSCRIPTION', 'LOAN_PAYMENTS', 'RENT_AND_UTILITIES', 'OTHER',
+]
+
+const fmtLabel = (cat) =>
+  cat.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+
 const getMonthRange = () => {
   const now = new Date()
   const start = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
@@ -100,7 +109,7 @@ export default function TransactionFilters({ filters, onChange, maxAmount = 500 
   }, [])
 
   const set = (key, value) => onChange({ ...filters, [key]: value })
-  const hasFilters = filters.account_id || filters.start || filters.end || filters.min_amount || filters.max_amount
+  const hasFilters = filters.account_id || filters.category || filters.start || filters.end || filters.min_amount || filters.max_amount
 
   return (
     <div style={{
@@ -127,6 +136,20 @@ export default function TransactionFilters({ filters, onChange, maxAmount = 500 
             <option key={a.plaid_account_id} value={a.plaid_account_id}>
               {a.institution_name}{a.mask ? ` ••${a.mask}` : a.name && a.name !== a.institution_name ? ` ${a.name}` : ''}
             </option>
+          ))}
+        </select>
+      </FilterGroup>
+
+      {/* Category filter */}
+      <FilterGroup label="Category">
+        <select
+          value={filters.category || ''}
+          onChange={(e) => set('category', e.target.value)}
+          style={{ ...inputStyle, width: 180 }}
+        >
+          <option value="">All categories</option>
+          {CATEGORIES.map((c) => (
+            <option key={c} value={c}>{fmtLabel(c)}</option>
           ))}
         </select>
       </FilterGroup>
@@ -189,7 +212,7 @@ export default function TransactionFilters({ filters, onChange, maxAmount = 500 
       {/* Clear button — only shown when a filter is active */}
       {hasFilters && (
         <button
-          onClick={() => onChange({ account_id: '', start: '', end: '', min_amount: '', max_amount: '' })}
+          onClick={() => onChange({ account_id: '', category: '', start: '', end: '', min_amount: '', max_amount: '' })}
           style={{
             alignSelf: 'flex-end',
             padding: '7px 14px',
