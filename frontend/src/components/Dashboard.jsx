@@ -360,7 +360,6 @@ export default function Dashboard({ connected, onConnected }) {
               <TransactionFilters
                 filters={filters}
                 onChange={(f) => { setFilters(f); load(chartTimeframe, f) }}
-                maxAmount={maxTransactionAmount}
               />
               {(filters.account_id || filters.start || filters.end || filters.min_amount || filters.max_amount) && (
                 <div style={{

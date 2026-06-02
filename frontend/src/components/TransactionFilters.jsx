@@ -48,60 +48,8 @@ function FilterGroup({ label, children }) {
   )
 }
 
-function AmountRangeSlider({ minVal, maxVal, maxAmount, onChange }) {
-  const lo = minVal === '' ? 0 : Number(minVal)
-  const hi = maxVal === '' ? maxAmount : Number(maxVal)
-  const loPercent = maxAmount > 0 ? (lo / maxAmount) * 100 : 0
-  const hiPercent = maxAmount > 0 ? (hi / maxAmount) * 100 : 100
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: 130, flexShrink: 0 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span style={labelStyle}>Amount</span>
-        <span style={{ fontSize: 11, color: 'var(--text-2)', fontFamily: 'var(--font-body)', letterSpacing: 0 }}>
-          ${lo.toLocaleString()} – {hi >= maxAmount ? '∞' : `$${hi.toLocaleString()}`}
-        </span>
-      </div>
-      <div className="range-slider" style={{ position: 'relative', height: 20, width: '100%' }}>
-        {/* Base track */}
-        <div style={{
-          position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-          width: '100%', height: 4, borderRadius: 2, background: 'var(--bg-3)',
-          pointerEvents: 'none',
-        }} />
-        {/* Active track */}
-        <div style={{
-          position: 'absolute', top: '50%', transform: 'translateY(-50%)',
-          left: `${loPercent}%`, width: `${hiPercent - loPercent}%`,
-          height: 4, borderRadius: 2, background: 'var(--accent)',
-          pointerEvents: 'none',
-        }} />
-        {/* Min thumb — boost z-index when near the max end so it stays draggable */}
-        <input
-          type="range" min={0} max={maxAmount} step={1}
-          value={lo}
-          style={{ zIndex: lo >= hi - maxAmount * 0.05 ? 5 : 3 }}
-          onChange={(e) => {
-            const v = Math.min(Number(e.target.value), hi - 1)
-            onChange({ min: v === 0 ? '' : String(v), max: maxVal })
-          }}
-        />
-        {/* Max thumb */}
-        <input
-          type="range" min={0} max={maxAmount} step={1}
-          value={hi}
-          style={{ zIndex: 4 }}
-          onChange={(e) => {
-            const v = Math.max(Number(e.target.value), lo + 1)
-            onChange({ min: minVal, max: v >= maxAmount ? '' : String(v) })
-          }}
-        />
-      </div>
-    </div>
-  )
-}
-
-export default function TransactionFilters({ filters, onChange, maxAmount = 500 }) {
+export default function TransactionFilters({ filters, onChange }) {
   const [accounts, setAccounts] = useState([])
 
   useEffect(() => {
@@ -177,13 +125,27 @@ export default function TransactionFilters({ filters, onChange, maxAmount = 500 
         />
       </FilterGroup>
 
-      {/* Amount range slider */}
-      <AmountRangeSlider
-        minVal={filters.min_amount}
-        maxVal={filters.max_amount}
-        maxAmount={maxAmount}
-        onChange={({ min, max }) => onChange({ ...filters, min_amount: min, max_amount: max })}
-      />
+      {/* Amount range */}
+      <FilterGroup label="Min $">
+        <input
+          type="number" min="0" step="1" placeholder="0"
+          value={filters.min_amount || ''}
+          onChange={(e) => set('min_amount', e.target.value)}
+          style={{ ...inputStyle, width: 72 }}
+          onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+          onBlur={(e) => e.target.style.borderColor = 'var(--border-2)'}
+        />
+      </FilterGroup>
+      <FilterGroup label="Max $">
+        <input
+          type="number" min="0" step="1" placeholder="∞"
+          value={filters.max_amount || ''}
+          onChange={(e) => set('max_amount', e.target.value)}
+          style={{ ...inputStyle, width: 72 }}
+          onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+          onBlur={(e) => e.target.style.borderColor = 'var(--border-2)'}
+        />
+      </FilterGroup>
 
       {/* This Month quick filter */}
       <button
