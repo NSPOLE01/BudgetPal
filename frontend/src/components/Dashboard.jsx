@@ -327,12 +327,16 @@ export default function Dashboard({ connected, onConnected }) {
                 <h2 style={{ fontFamily: 'var(--font-head)', fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em' }}>
                   Transactions
                 </h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {lastSync && (
                     <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
                       Updated {lastSync.toLocaleTimeString()}
                     </span>
                   )}
+                  <TransactionFilters
+                    filters={filters}
+                    onChange={(f) => { setFilters(f); load(chartTimeframe, f) }}
+                  />
                   <button
                     onClick={() => setShowAddModal(true)}
                     style={{
@@ -357,10 +361,6 @@ export default function Dashboard({ connected, onConnected }) {
                   </button>
                 </div>
               </div>
-              <TransactionFilters
-                filters={filters}
-                onChange={(f) => { setFilters(f); load(chartTimeframe, f) }}
-              />
               {(filters.account_id || filters.start || filters.end || filters.min_amount || filters.max_amount) && (
                 <div style={{
                   display: 'flex',

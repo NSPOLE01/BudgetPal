@@ -65,6 +65,17 @@ html, body, #root {
   to   { transform: rotate(360deg); }
 }
 
+/* Date picker calendar icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.6;
+}
+:root[data-theme='light'] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0);
+  opacity: 0.5;
+}
+
 /* Dual-range slider */
 .range-slider input[type=range] {
   -webkit-appearance: none;

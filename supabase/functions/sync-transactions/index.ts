@@ -34,7 +34,10 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  const { data: items, error } = await supabase.from('items').select('*')
+  const { data: items, error } = await supabase
+    .from('items')
+    .select('*')
+    .like('plaid_access_token', 'access-%')
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 })
   if (!items.length) return new Response(JSON.stringify({ synced: 0 }))
 
