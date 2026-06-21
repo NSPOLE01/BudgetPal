@@ -17,6 +17,16 @@ const getMonthRange = () => {
   return { start, end }
 }
 
+const getWeekRange = () => {
+  const now = new Date()
+  const dayOfWeek = now.getDay() === 0 ? 6 : now.getDay() - 1 // Mon=0
+  const weekStart = new Date(now)
+  weekStart.setDate(now.getDate() - dayOfWeek)
+  const start = weekStart.toISOString().split('T')[0]
+  const end = now.toISOString().split('T')[0]
+  return { start, end }
+}
+
 const inputStyle = {
   width: '100%',
   background: 'var(--bg)',
@@ -72,6 +82,7 @@ export default function TransactionFilters({ filters, onChange }) {
   ].filter(Boolean).length
 
   const isThisMonth = filters.start === getMonthRange().start && filters.end === getMonthRange().end
+  const isThisWeek = filters.start === getWeekRange().start && filters.end === getWeekRange().end
 
   const clear = () => onChange({ account_id: '', category: '', start: '', end: '', min_amount: '', max_amount: '' })
 
@@ -190,7 +201,24 @@ export default function TransactionFilters({ filters, onChange }) {
         )}
       </div>
 
-      {/* This Month quick filter — always visible */}
+      {/* Quick filters — always visible */}
+      <button
+        onClick={() => onChange({ ...filters, ...getWeekRange() })}
+        style={{
+          padding: '7px 12px',
+          background: isThisWeek ? 'var(--accent)' : 'var(--bg-3)',
+          border: `1px solid ${isThisWeek ? 'var(--accent)' : 'var(--border-2)'}`,
+          borderRadius: 8,
+          color: isThisWeek ? '#fff' : 'var(--text-2)',
+          fontFamily: 'var(--font-body)',
+          fontSize: 12,
+          cursor: 'pointer',
+          transition: 'all 0.15s',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        This Week
+      </button>
       <button
         onClick={() => onChange({ ...filters, ...getMonthRange() })}
         style={{
@@ -216,8 +244,11 @@ export default function TransactionFilters({ filters, onChange }) {
       {filters.category && (
         <Chip label={fmtLabel(filters.category)} onRemove={() => set('category', '')} />
       )}
-      {(filters.start || filters.end) && !isThisMonth && (
+      {(filters.start || filters.end) && !isThisMonth && !isThisWeek && (
         <Chip label={[filters.start, filters.end].filter(Boolean).join(' → ')} onRemove={() => onChange({ ...filters, start: '', end: '' })} />
+      )}
+      {isThisWeek && (
+        <Chip label="This Week" onRemove={() => onChange({ ...filters, start: '', end: '' })} />
       )}
       {isThisMonth && (
         <Chip label="This Month" onRemove={() => onChange({ ...filters, start: '', end: '' })} />
