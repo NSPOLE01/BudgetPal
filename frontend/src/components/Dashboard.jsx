@@ -12,18 +12,14 @@ import { getSpendingSummary, getTransactions, getMonthlyTotals, syncTransactions
 import supabase from '../lib/supabase.js'
 
 const TIMEFRAMES = [
-  { label: 'This Month', months: null },
-  { label: '1M', months: 1 },
-  { label: '6M', months: 6 },
-  { label: '1Y', months: 12 },
+  { label: '1W', days: 7 },
+  { label: '1M', days: 30 },
+  { label: '1Y', days: 365 },
 ]
 
-function getChartStart(months) {
+function getChartStart(days) {
   const d = new Date()
-  if (months === null) {
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
-  }
-  d.setMonth(d.getMonth() - months)
+  d.setDate(d.getDate() - days)
   return d.toISOString().split('T')[0]
 }
 
@@ -33,7 +29,7 @@ export default function Dashboard({ connected, onConnected }) {
   const [syncing, setSyncing] = useState(false)
   const [lastSync, setLastSync] = useState(null)
   const [error, setError] = useState(null)
-  const [chartTimeframe, setChartTimeframe] = useState('This Month')
+  const [chartTimeframe, setChartTimeframe] = useState('1M')
   const [monthlyTotals, setMonthlyTotals] = useState([])
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
   const [toast, setToast] = useState(null)
@@ -55,11 +51,11 @@ export default function Dashboard({ connected, onConnected }) {
 
   const load = useCallback(async (timeframe = chartTimeframe, activeFilters = filters) => {
     if (!connected) return
-    const months = (TIMEFRAMES.find((t) => t.label === timeframe) ?? TIMEFRAMES[0]).months
+    const days = (TIMEFRAMES.find((t) => t.label === timeframe) ?? TIMEFRAMES[0]).days
     const txParams = Object.fromEntries(Object.entries({ limit: 50, ...activeFilters }).filter(([, v]) => v !== ''))
     try {
       const [s, t, m] = await Promise.all([
-        getSpendingSummary(getChartStart(months)),
+        getSpendingSummary(getChartStart(days)),
         getTransactions(txParams),
         getMonthlyTotals(),
       ])
@@ -77,8 +73,8 @@ export default function Dashboard({ connected, onConnected }) {
 
   const handleTimeframeChange = (label) => {
     setChartTimeframe(label)
-    const months = (TIMEFRAMES.find((t) => t.label === label) ?? TIMEFRAMES[0]).months
-    getSpendingSummary(getChartStart(months)).then(setSummary).catch(() => {})
+    const days = (TIMEFRAMES.find((t) => t.label === label) ?? TIMEFRAMES[0]).days
+    getSpendingSummary(getChartStart(days)).then(setSummary).catch(() => {})
   }
 
   useEffect(() => { load() }, [load])
@@ -143,9 +139,9 @@ export default function Dashboard({ connected, onConnected }) {
           onClose={() => setShowAddModal(false)}
           onCreated={(tx) => {
             setTransactions((prev) => [tx, ...prev])
-            const months = (TIMEFRAMES.find((t) => t.label === chartTimeframe) ?? TIMEFRAMES[0]).months
+            const days = (TIMEFRAMES.find((t) => t.label === chartTimeframe) ?? TIMEFRAMES[0]).days
             Promise.all([
-              getSpendingSummary(getChartStart(months)),
+              getSpendingSummary(getChartStart(days)),
               getMonthlyTotals(),
             ]).then(([s, m]) => { setSummary(s); setMonthlyTotals(m) }).catch(() => {})
             showToast('Transaction added')
@@ -397,15 +393,15 @@ export default function Dashboard({ connected, onConnected }) {
                 onTransactionUpdated={(updated) => {
                   setTransactions((prev) => prev.map((tx) => tx.id === updated.id ? updated : tx))
                   setCalendarKey((k) => k + 1)
-                  const months = (TIMEFRAMES.find((t) => t.label === chartTimeframe) ?? TIMEFRAMES[0]).months
-                  getSpendingSummary(getChartStart(months)).then(setSummary).catch(() => {})
+                  const days = (TIMEFRAMES.find((t) => t.label === chartTimeframe) ?? TIMEFRAMES[0]).days
+                  getSpendingSummary(getChartStart(days)).then(setSummary).catch(() => {})
                 }}
                 onTransactionDeleted={(id) => {
                   setTransactions((prev) => prev.filter((tx) => tx.id !== id))
                   setCalendarKey((k) => k + 1)
-                  const months = (TIMEFRAMES.find((t) => t.label === chartTimeframe) ?? TIMEFRAMES[0]).months
+                  const days = (TIMEFRAMES.find((t) => t.label === chartTimeframe) ?? TIMEFRAMES[0]).days
                   Promise.all([
-                    getSpendingSummary(getChartStart(months)),
+                    getSpendingSummary(getChartStart(days)),
                     getMonthlyTotals(),
                   ]).then(([s, m]) => { setSummary(s); setMonthlyTotals(m) }).catch(() => {})
                 }}
