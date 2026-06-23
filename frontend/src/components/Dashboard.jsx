@@ -150,15 +150,23 @@ export default function Dashboard({ connected, onConnected }) {
         />
       )}
       {/* Top bar */}
+      <div style={{
+        position: 'fixed',
+        top: 16,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 100,
+        width: 'calc(100% - 96px)',
+        maxWidth: 1100,
+      }}>
       <header style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-        borderBottom: '1px solid var(--border)',
-        background: 'color-mix(in srgb, var(--bg) 85%, transparent)',
-        backdropFilter: 'blur(12px)',
-        padding: '0 32px',
-        height: 56,
+        borderRadius: 999,
+        border: '1px solid var(--border-2)',
+        background: 'color-mix(in srgb, var(--bg-2) 80%, transparent)',
+        backdropFilter: 'blur(20px)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
+        padding: '0 24px',
+        height: 52,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -226,8 +234,9 @@ export default function Dashboard({ connected, onConnected }) {
           <ConnectButton onConnected={onConnected} compact />
         </div>
       </header>
+      </div>
 
-      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 32px' }}>
+      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '88px 32px 40px' }}>
         {error && (
           <div style={{
             padding: '12px 16px',
