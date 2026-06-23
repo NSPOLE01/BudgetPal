@@ -25,14 +25,31 @@ function CustomTooltip({ active, payload }) {
   )
 }
 
-export default function MonthlyChart({ data }) {
-  if (!data?.length) return (
+function filterByTimeframe(data, timeframe) {
+  if (!data?.length || timeframe === 'All') return data
+  const now = new Date()
+  let cutoff
+  if (timeframe === '1M') {
+    cutoff = new Date(now); cutoff.setMonth(now.getMonth() - 1)
+  } else if (timeframe === '6M') {
+    cutoff = new Date(now); cutoff.setMonth(now.getMonth() - 6)
+  } else if (timeframe === '1Y') {
+    cutoff = new Date(now); cutoff.setFullYear(now.getFullYear() - 1)
+  }
+  const cutoffStr = cutoff.toISOString().slice(0, 7) // 'YYYY-MM'
+  return data.filter((d) => d.month >= cutoffStr)
+}
+
+export default function MonthlyChart({ data, timeframe = '1Y' }) {
+  const filtered = filterByTimeframe(data, timeframe)
+
+  if (!filtered?.length) return (
     <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <p style={{ color: 'var(--text-3)', fontSize: 13 }}>No data yet</p>
     </div>
   )
 
-  const chartData = data.map((d) => ({ ...d, label: fmtMonth(d.month) }))
+  const chartData = filtered.map((d) => ({ ...d, label: fmtMonth(d.month) }))
 
   return (
     <div style={{ animation: 'fadeUp 0.4s ease 0.2s both' }}>

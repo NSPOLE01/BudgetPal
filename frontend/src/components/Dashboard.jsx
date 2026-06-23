@@ -36,6 +36,7 @@ export default function Dashboard({ connected, onConnected }) {
   const [filters, setFilters] = useState({ account_id: '', category: '', start: '', end: '', min_amount: '', max_amount: '' })
   const [maxTransactionAmount, setMaxTransactionAmount] = useState(500)
   const [calendarKey, setCalendarKey] = useState(0)
+  const [monthlyTimeframe, setMonthlyTimeframe] = useState('1Y')
   const [showAddModal, setShowAddModal] = useState(false)
   const realtimeBuffer = useRef(0)
   const realtimeTimer = useRef(null)
@@ -262,9 +263,30 @@ export default function Dashboard({ connected, onConnected }) {
                 <h2 style={{ fontFamily: 'var(--font-head)', fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em' }}>
                   Monthly Spend
                 </h2>
-                <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Since first transaction</span>
+                <div style={{ display: 'flex', gap: 4, background: 'var(--bg)', borderRadius: 8, padding: 3, border: '1px solid var(--border)' }}>
+                  {['1M', '6M', '1Y', 'All'].map((label) => (
+                    <button
+                      key={label}
+                      onClick={() => setMonthlyTimeframe(label)}
+                      style={{
+                        padding: '4px 12px',
+                        borderRadius: 6,
+                        border: 'none',
+                        fontFamily: 'var(--font-body)',
+                        fontSize: 12,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        background: monthlyTimeframe === label ? 'var(--bg-3)' : 'transparent',
+                        color: monthlyTimeframe === label ? 'var(--text)' : 'var(--text-3)',
+                        fontWeight: monthlyTimeframe === label ? 500 : 400,
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <MonthlyChart data={monthlyTotals} />
+              <MonthlyChart data={monthlyTotals} timeframe={monthlyTimeframe} />
             </section>
 
             {/* Calendar */}
