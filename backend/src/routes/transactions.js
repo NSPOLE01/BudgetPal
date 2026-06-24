@@ -65,9 +65,8 @@ router.get('/summary', async (req, res) => {
     const now = new Date()
     const todayStr = now.toISOString().split('T')[0]
 
-    const dayOfWeek = now.getDay() === 0 ? 6 : now.getDay() - 1
     const weekStart = new Date(now)
-    weekStart.setDate(now.getDate() - dayOfWeek)
+    weekStart.setDate(now.getDate() - now.getDay()) // Sunday-start
     const weekStartStr = weekStart.toISOString().split('T')[0]
 
     const monthStartStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
