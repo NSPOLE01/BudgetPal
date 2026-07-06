@@ -182,21 +182,6 @@ export default function TransactionFilters({ filters, onChange }) {
               </Field>
             </div>
 
-            {activeCount > 0 && (
-              <button
-                onClick={() => { clear(); setOpen(false) }}
-                style={{
-                  width: '100%', padding: '7px', borderRadius: 8, cursor: 'pointer',
-                  background: 'none', border: '1px solid var(--border-2)',
-                  color: 'var(--text-3)', fontFamily: 'var(--font-body)', fontSize: 12,
-                  transition: 'all 0.15s', marginTop: 2,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--red)'; e.currentTarget.style.color = 'var(--red)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-2)'; e.currentTarget.style.color = 'var(--text-3)' }}
-              >
-                Clear all filters
-              </button>
-            )}
           </div>
         )}
       </div>
@@ -258,6 +243,21 @@ export default function TransactionFilters({ filters, onChange }) {
           label={`$${filters.min_amount || '0'} – ${filters.max_amount ? '$' + filters.max_amount : '∞'}`}
           onRemove={() => onChange({ ...filters, min_amount: '', max_amount: '' })}
         />
+      )}
+      {activeCount > 0 && (
+        <button
+          onClick={clear}
+          style={{
+            padding: '5px 10px', borderRadius: 8, cursor: 'pointer',
+            background: 'none', border: '1px solid var(--border-2)',
+            color: 'var(--text-3)', fontFamily: 'var(--font-body)', fontSize: 12,
+            transition: 'all 0.15s', whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--red)'; e.currentTarget.style.color = 'var(--red)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-2)'; e.currentTarget.style.color = 'var(--text-3)' }}
+        >
+          Clear
+        </button>
       )}
     </div>
   )
