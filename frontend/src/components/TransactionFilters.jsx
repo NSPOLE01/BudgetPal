@@ -222,28 +222,6 @@ export default function TransactionFilters({ filters, onChange }) {
         This Month
       </button>
 
-      {/* Active filter chips */}
-      {filters.account_id && (
-        <Chip label={accounts.find(a => a.plaid_account_id === filters.account_id)?.institution_name || 'Card'} onRemove={() => set('account_id', '')} />
-      )}
-      {filters.category && (
-        <Chip label={fmtLabel(filters.category)} onRemove={() => set('category', '')} />
-      )}
-      {(filters.start || filters.end) && !isThisMonth && !isThisWeek && (
-        <Chip label={[filters.start, filters.end].filter(Boolean).join(' → ')} onRemove={() => onChange({ ...filters, start: '', end: '' })} />
-      )}
-      {isThisWeek && (
-        <Chip label="This Week" onRemove={() => onChange({ ...filters, start: '', end: '' })} />
-      )}
-      {isThisMonth && (
-        <Chip label="This Month" onRemove={() => onChange({ ...filters, start: '', end: '' })} />
-      )}
-      {(filters.min_amount || filters.max_amount) && (
-        <Chip
-          label={`$${filters.min_amount || '0'} – ${filters.max_amount ? '$' + filters.max_amount : '∞'}`}
-          onRemove={() => onChange({ ...filters, min_amount: '', max_amount: '' })}
-        />
-      )}
       {activeCount > 0 && (
         <button
           onClick={clear}
@@ -263,28 +241,3 @@ export default function TransactionFilters({ filters, onChange }) {
   )
 }
 
-function Chip({ label, onRemove }) {
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 5,
-      padding: '4px 8px 4px 10px',
-      background: 'rgba(108,99,255,0.1)',
-      border: '1px solid rgba(108,99,255,0.3)',
-      borderRadius: 20,
-      fontSize: 11, color: 'var(--accent)',
-      fontFamily: 'var(--font-body)',
-      whiteSpace: 'nowrap',
-    }}>
-      {label}
-      <button
-        onClick={onRemove}
-        style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          color: 'var(--accent)', fontSize: 14, lineHeight: 1,
-          padding: 0, display: 'flex', alignItems: 'center',
-          opacity: 0.7,
-        }}
-      >×</button>
-    </span>
-  )
-}
