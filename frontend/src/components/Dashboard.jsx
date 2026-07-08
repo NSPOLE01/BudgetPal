@@ -8,7 +8,7 @@ import TransactionFilters from './TransactionFilters.jsx'
 import AddTransactionModal from './AddTransactionModal.jsx'
 import CalendarView from './CalendarView.jsx'
 import Toast from './Toast.jsx'
-import { getSpendingSummary, getTransactions, getMonthlyTotals, syncTransactions } from '../lib/api.js'
+import { getSpendingSummary, getTransactions, getMonthlyTotals, syncTransactions, getConnectedItems } from '../lib/api.js'
 import supabase from '../lib/supabase.js'
 
 const TIMEFRAMES = [
@@ -37,6 +37,9 @@ export default function Dashboard({ connected, onConnected }) {
   const [maxTransactionAmount, setMaxTransactionAmount] = useState(500)
   const [calendarKey, setCalendarKey] = useState(0)
   const [monthlyTimeframe, setMonthlyTimeframe] = useState('1Y')
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [connectedItems, setConnectedItems] = useState([])
+  const profileRef = useRef(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const realtimeBuffer = useRef(0)
   const realtimeTimer = useRef(null)
@@ -79,6 +82,16 @@ export default function Dashboard({ connected, onConnected }) {
   }
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (connected) getConnectedItems().then(setConnectedItems).catch(() => {})
+  }, [connected])
+
+  useEffect(() => {
+    const handler = (e) => { if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   // Realtime subscription — auto-refresh when Edge Function inserts new transactions
   useEffect(() => {
@@ -219,6 +232,80 @@ export default function Dashboard({ connected, onConnected }) {
               </svg>
             )}
           </button>
+          {/* Profile popover */}
+          <div style={{ position: 'relative' }} ref={profileRef}>
+            <button
+              onClick={() => setProfileOpen((o) => !o)}
+              title="Connected accounts"
+              style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: 34, height: 34,
+                background: profileOpen ? 'var(--bg-3)' : 'var(--bg-3)',
+                border: `1px solid ${profileOpen ? 'var(--accent)' : 'var(--border-2)'}`,
+                borderRadius: 8, cursor: 'pointer',
+                color: profileOpen ? 'var(--accent)' : 'var(--text-2)',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)' }}
+              onMouseLeave={(e) => { if (!profileOpen) { e.currentTarget.style.borderColor = 'var(--border-2)'; e.currentTarget.style.color = 'var(--text-2)' } }}
+            >
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <circle cx="7.5" cy="5.5" r="2.5" stroke="currentColor" strokeWidth="1.4"/>
+                <path d="M2 13c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+            </button>
+
+            {profileOpen && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+                zIndex: 200,
+                background: 'var(--bg-2)',
+                border: '1px solid var(--border)',
+                borderRadius: 12,
+                width: 280,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+                overflow: 'hidden',
+                animation: 'fadeUp 0.15s ease both',
+              }}>
+                <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
+                  <p style={{ fontSize: 11, color: 'var(--text-3)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    Connected Accounts
+                  </p>
+                </div>
+                {connectedItems.filter(item => item.institution_name !== 'Venmo' || item.institution_name === 'Venmo').filter(item => !item.plaid_access_token?.startsWith?.('manual')).length === 0 && connectedItems.length === 0 ? (
+                  <p style={{ padding: '20px 16px', fontSize: 13, color: 'var(--text-3)', textAlign: 'center' }}>No accounts connected</p>
+                ) : (
+                  connectedItems
+                    .filter(item => item.institution_name !== 'Venmo')
+                    .map((item) => (
+                      <div key={item.id} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '12px 16px',
+                        borderBottom: '1px solid var(--border)',
+                      }}>
+                        <div>
+                          <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 3 }}>
+                            {item.institution_name}
+                          </p>
+                          <p style={{ fontSize: 11, color: 'var(--text-3)' }}>
+                            {item.last_synced_at
+                              ? `Last synced ${new Date(item.last_synced_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at ${new Date(item.last_synced_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+                              : 'Never synced'}
+                          </p>
+                        </div>
+                        <div style={{
+                          width: 8, height: 8, borderRadius: '50%',
+                          background: item.last_synced_at ? 'var(--green)' : 'var(--text-3)',
+                          boxShadow: item.last_synced_at ? '0 0 6px var(--green)' : 'none',
+                          flexShrink: 0,
+                        }} />
+                      </div>
+                    ))
+                )}
+              </div>
+            )}
+          </div>
+
           {connected && (
             <button style={syncBtnStyle} onClick={handleSync} disabled={syncing}
               onMouseEnter={(e) => !syncing && (e.currentTarget.style.borderColor = 'var(--accent)')}

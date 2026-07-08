@@ -27,6 +27,9 @@ export const syncTransactions = () =>
 export const getConnectedItems = () =>
   request('/api/plaid/items')
 
+export const getItems = () =>
+  request('/api/plaid/items')
+
 export const getAccounts = () =>
   request('/api/accounts')
 
