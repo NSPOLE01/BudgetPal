@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import ConnectButton from './ConnectButton.jsx'
 import SpendSummary from './SpendSummary.jsx'
 import CategoryChart from './CategoryChart.jsx'
@@ -40,6 +41,7 @@ export default function Dashboard({ connected, onConnected }) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [connectedItems, setConnectedItems] = useState([])
   const profileRef = useRef(null)
+  const profileBtnRef = useRef(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const realtimeBuffer = useRef(0)
   const realtimeTimer = useRef(null)
@@ -233,14 +235,15 @@ export default function Dashboard({ connected, onConnected }) {
             )}
           </button>
           {/* Profile popover */}
-          <div style={{ position: 'relative' }} ref={profileRef}>
+          <div ref={profileRef}>
             <button
+              ref={profileBtnRef}
               onClick={() => setProfileOpen((o) => !o)}
               title="Connected accounts"
               style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 width: 34, height: 34,
-                background: profileOpen ? 'var(--bg-3)' : 'var(--bg-3)',
+                background: 'var(--bg-3)',
                 border: `1px solid ${profileOpen ? 'var(--accent)' : 'var(--border-2)'}`,
                 borderRadius: 8, cursor: 'pointer',
                 color: profileOpen ? 'var(--accent)' : 'var(--text-2)',
@@ -255,9 +258,11 @@ export default function Dashboard({ connected, onConnected }) {
               </svg>
             </button>
 
-            {profileOpen && (
+            {profileOpen && profileBtnRef.current && createPortal(
               <div style={{
-                position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+                position: 'fixed',
+                top: profileBtnRef.current.getBoundingClientRect().bottom + 10,
+                left: profileBtnRef.current.getBoundingClientRect().left + profileBtnRef.current.getBoundingClientRect().width / 2 - 140,
                 zIndex: 200,
                 background: 'var(--bg-2)',
                 border: '1px solid var(--border)',
@@ -272,7 +277,7 @@ export default function Dashboard({ connected, onConnected }) {
                     Connected Accounts
                   </p>
                 </div>
-                {connectedItems.filter(item => item.institution_name !== 'Venmo' || item.institution_name === 'Venmo').filter(item => !item.plaid_access_token?.startsWith?.('manual')).length === 0 && connectedItems.length === 0 ? (
+                {connectedItems.filter(item => !item.plaid_access_token?.startsWith?.('manual')).length === 0 ? (
                   <p style={{ padding: '20px 16px', fontSize: 13, color: 'var(--text-3)', textAlign: 'center' }}>No accounts connected</p>
                 ) : (
                   connectedItems
@@ -302,7 +307,8 @@ export default function Dashboard({ connected, onConnected }) {
                       </div>
                     ))
                 )}
-              </div>
+              </div>,
+              document.body
             )}
           </div>
 
